@@ -1,0 +1,37 @@
+{
+  "name": "vero-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
+    "start:api": "NODE_ENV=production node dist/main.js",
+    "dev": "ts-node-dev --respawn src/main.ts",
+    "typeorm": "npx typeorm-ts-node-commonjs --dataSource ./src/infrastructure/typeorm/typeorm-cli-data-source.ts",
+    "typeorm:migrate": "npm run typeorm -- migration:run",
+    "typeorm:migrate:prod": "NODE_ENV=production npx typeorm-ts-node-commonjs --dataSource ./dist/api/infrastructure/typeorm/typeorm-cli-data-source.js migration:run",
+    "typeorm:generate": "npm run typeorm -- migration:generate ./src/infrastructure/typeorm/migrations/migration",
+    "typeorm:revert": "npm run typeorm -- migration:revert"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@metamask/delegation-toolkit": "^0.13.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0",
+    "typeorm": "^0.3.27",
+    "uuid": "^13.0.0",
+    "zod": "^4.1.12"
+  }
+}

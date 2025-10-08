@@ -2,10 +2,10 @@ import { v4 as uuid4 } from "uuid";
 import { OTP_EXPIRY_SECONDS } from "../../utils/constants";
 import { OtpType } from "../../types/common";
 
-export class OtpEntity {
+export class OtpEntity<Data extends object | undefined> {
   private readonly _id: string;
   private _code!: string;
-  private _identifier!: string;
+  private _data!: Data;
   private _token!: string;
   private _type!: OtpType;
   private readonly _createdAt: Date;
@@ -15,17 +15,17 @@ export class OtpEntity {
     this._createdAt = createdAt ? new Date(createdAt) : new Date();
   }
 
-  static create(
+  static create<Data extends object | undefined>(
     code: string,
-    identifier: string,
     token: string,
     type: OtpType,
+    data: Data,
     id?: string,
     createdAt?: Date
-  ): OtpEntity {
-    const otp = new OtpEntity(id, createdAt);
+  ): OtpEntity<Data> {
+    const otp = new OtpEntity<Data>(id, createdAt);
     otp._code = code;
-    otp._identifier = identifier;
+    otp._data = data;
     otp._token = token;
     otp._type = type;
     return otp;
@@ -54,8 +54,8 @@ export class OtpEntity {
     return this._code;
   }
 
-  get identifier(): string {
-    return this._identifier;
+  get data(): Data {
+    return this._data;
   }
 
   get token(): string {

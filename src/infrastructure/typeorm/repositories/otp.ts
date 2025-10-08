@@ -12,11 +12,13 @@ export class OtpRepository implements IOtpRepository {
     this.repo = manager.getRepository(OtpOrmEntity);
   }
 
-  async save(otp: OtpEntity): Promise<void> {
+  async save<Data extends object | undefined>(
+    otp: OtpEntity<Data>
+  ): Promise<void> {
     const record = this.repo.create({
       id: otp.id,
       code: otp.code,
-      identifier: otp.identifier,
+      data: otp.data || null,
       token: otp.token,
       type: otp.type,
       createdAt: otp.createdAt,
@@ -25,15 +27,18 @@ export class OtpRepository implements IOtpRepository {
     await this.repo.save(record);
   }
 
-  async findByToken(token: string, type: OtpType): Promise<OtpEntity | null> {
+  async findByToken<Data extends object | undefined>(
+    token: string,
+    type: OtpType
+  ): Promise<OtpEntity<Data> | null> {
     const record = await this.repo.findOne({ where: { token, type } });
     if (!record) return null;
 
-    const entity = OtpEntity.create(
+    const entity = OtpEntity.create<Data>(
       record.code,
-      record.identifier,
       record.token,
       record.type,
+      record.data ?? undefined,
       record.id,
       record.createdAt
     );

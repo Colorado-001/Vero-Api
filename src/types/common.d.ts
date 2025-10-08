@@ -1,1 +1,5 @@
-export type OtpType = "signup" | "login";
+export type OtpType = "emailSignup" | "login";
+
+export type EmailSignupOtpData = {
+  email: string;
+};

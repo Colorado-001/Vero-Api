@@ -18,7 +18,7 @@ export class UserRepository implements IUserRepository {
       record.implementation,
       record.deployed,
       record.email,
-      record.username,
+      record.username ?? undefined,
       {
         id: record.id,
         createdAt: record.createdAt,

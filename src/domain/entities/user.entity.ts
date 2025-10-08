@@ -7,8 +7,8 @@ import {
 export class UserEntity {
   private readonly _id!: string;
   private _email!: string;
-  private _username!: string;
-  private _privateKey!: BlockchainAddress;
+  private _username!: string | null;
+  private _privateKey!: string;
   private _smartAccountAddress!: BlockchainAddress;
   private _ownerEOA!: BlockchainAddress;
   private _implementation!: SmartAccountImplementation;
@@ -24,13 +24,13 @@ export class UserEntity {
   }
 
   static create(
-    privateKey: BlockchainAddress,
+    privateKey: string,
     smartAccountAddress: BlockchainAddress,
     ownerEOA: BlockchainAddress,
     implementation: SmartAccountImplementation,
     deployed: boolean,
     email: string,
-    username: string,
+    username?: string,
     orm?: {
       id: string;
       createdAt: Date;
@@ -49,7 +49,7 @@ export class UserEntity {
     user._deployed = deployed;
     user._enabled = orm?.enabled ?? false;
     user._email = email;
-    user._username = username;
+    user._username = username ?? null;
 
     return user;
   }

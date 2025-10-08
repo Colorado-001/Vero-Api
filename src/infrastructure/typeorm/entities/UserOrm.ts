@@ -20,11 +20,11 @@ export class UserOrmEntity {
   @Column({ unique: true })
   email!: string;
 
-  @Column({ unique: true })
-  username!: string;
+  @Column({ unique: true, type: "varchar", nullable: true })
+  username!: string | null;
 
   @Column({ type: "text" })
-  privateKey!: BlockchainAddress;
+  privateKey!: string;
 
   @Column({ type: "varchar", length: 100 })
   smartAccountAddress!: BlockchainAddress;

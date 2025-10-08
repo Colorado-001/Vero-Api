@@ -16,8 +16,8 @@ export class OtpOrmEntity {
   @Column()
   code!: string;
 
-  @Column()
-  identifier!: string;
+  @Column({ type: "jsonb", nullable: true })
+  data!: any;
 
   @Column()
   token!: string;

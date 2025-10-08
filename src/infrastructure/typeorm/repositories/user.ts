@@ -53,6 +53,11 @@ export class UserRepository implements IUserRepository {
     return record ? this.mapToDomain(record) : null;
   }
 
+  async findById(id: string): Promise<UserEntity | null> {
+    const record = await this.repo.findOne({ where: { id } });
+    return record ? this.mapToDomain(record) : null;
+  }
+
   async findByUsername(username: string): Promise<UserEntity | null> {
     const record = await this.repo.findOne({
       where: { username },

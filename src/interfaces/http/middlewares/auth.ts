@@ -1,19 +1,36 @@
+import { JwtService } from "../../../application/services";
 import { UnauthorizedError } from "../../../utils/errors";
 import { asyncHandler } from "./async-handler";
 
 const excludePaths = ["/docs", "/docs/"];
 
-// TODO: change to jwt
-export const checkUser = asyncHandler(async (req, _, next) => {
-  const sub = req.headers["x-user-id"] as string;
+export const checkUser = (jwtService: JwtService) =>
+  asyncHandler(async (req, _, next) => {
+    // Skip JWT check for excluded paths
+    if (excludePaths.includes(req.path)) {
+      return next();
+    }
 
-  console.log("USER >>>>>", sub);
+    const authorization = req.headers.authorization;
 
-  if (!sub && !excludePaths.some((e) => req.path.startsWith(e))) {
-    throw new UnauthorizedError();
-  }
+    if (!authorization) {
+      throw new UnauthorizedError("Unauthenticated");
+    }
 
-  req.user = { sub };
+    const token = authorization.split(" ")[1];
 
-  next();
-});
+    if (!token) {
+      throw new UnauthorizedError("Unauthenticated");
+    }
+
+    try {
+      const data = jwtService.verify<{ sub: string }>(token);
+      console.log("USER >>>>>", data.sub);
+
+      req.user = data;
+
+      next();
+    } catch (error) {
+      throw new UnauthorizedError("Unauthenticated");
+    }
+  });

@@ -9,7 +9,7 @@ import { createHTTPServer } from "./interfaces/http/server";
       (mem.heapUsed / 1024 / 1024).toFixed(2),
       "MB"
     );
-  }, 10000);
+  }, 5000);
 
   try {
     const config = validateEnv(process.env);
@@ -21,6 +21,7 @@ import { createHTTPServer } from "./interfaces/http/server";
 
     const gracefulShutdown = async (signal: string) => {
       console.log(`${signal} received: shutting down gracefully...`);
+      clearInterval(interval);
       try {
         await Promise.race([
           Promise.all([server.closeAllConnections(), close()]),
@@ -51,8 +52,6 @@ import { createHTTPServer } from "./interfaces/http/server";
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
-  } finally {
-    clearInterval(interval);
   }
 })();
 

@@ -23,6 +23,21 @@ export class MockEmailTemplateParser implements IEmailTemplateParser {
           subject: "Verification Code",
         };
 
+      case "loginOtp":
+        return {
+          body: `
+        <html>
+          <body>
+            <h1>Welcome back!</h1>
+            <p>Your one-time verification code is:</p>
+            <h2>${data.code}</h2>
+            <p>This code expires in 10 minutes.</p>
+          </body>
+        </html>
+      `,
+          subject: "Verification Code",
+        };
+
       default:
         console.info(`Email type: ${key}`);
         throw new InternalServerError("Invalid email type");

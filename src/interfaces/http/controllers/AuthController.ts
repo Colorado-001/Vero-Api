@@ -11,8 +11,10 @@ import {
   UserRepository,
 } from "../../../infrastructure/typeorm/repositories/index.js";
 import {
+  LoginUseCase,
   SetupEmailSignupUseCase,
   VerifyEmailSignupUseCase,
+  VerifyLoginUseCase,
 } from "../../../application/usecases/index.js";
 
 export class AuthController {
@@ -20,6 +22,28 @@ export class AuthController {
     private readonly coreDeps: CoreDependencies,
     private readonly config: Env
   ) {}
+
+  login = async (req: AuthRequest, res: Response) => {
+    const { email } = AuthValidator.validateEmailSignup(req);
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const userRepo = new UserRepository(manager);
+        const otpRepo = new OtpRepository(manager);
+
+        const useCase = new LoginUseCase(
+          otpRepo,
+          userRepo,
+          this.coreDeps.emailTemplateParser,
+          this.coreDeps.notificationService
+        );
+
+        const token = await useCase.execute({ email });
+
+        res.status(httpStatus.OK).json({ token });
+      }
+    );
+  };
 
   signupEmail = async (req: AuthRequest, res: Response) => {
     const { email } = AuthValidator.validateEmailSignup(req);
@@ -39,6 +63,27 @@ export class AuthController {
         const token = await useCase.execute({ email });
 
         res.status(httpStatus.OK).json({ token });
+      }
+    );
+  };
+
+  verifyLogin = async (req: AuthRequest, res: Response) => {
+    const data = AuthValidator.validateVerifyEmailSignup(req);
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const userRepo = new UserRepository(manager);
+        const otpRepo = new OtpRepository(manager);
+
+        const useCase = new VerifyLoginUseCase(
+          otpRepo,
+          userRepo,
+          this.coreDeps.jwtService
+        );
+
+        const access_token = await useCase.execute(data);
+
+        res.status(httpStatus.OK).json({ access_token });
       }
     );
   };

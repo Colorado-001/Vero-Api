@@ -25,7 +25,6 @@ export const checkUser = (jwtService: JwtService) =>
 
     try {
       const data = jwtService.verify<{ sub: string }>(token);
-      console.log("USER >>>>>", data.sub);
 
       req.user = data;
 

@@ -7,7 +7,6 @@ export class TypeORMSessionManager implements IPersistenceSessionManager {
   async executeInTransaction<T>(
     work: (manager: EntityManager) => Promise<T>
   ): Promise<T> {
-    console.log("Begin db session");
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -21,7 +20,6 @@ export class TypeORMSessionManager implements IPersistenceSessionManager {
       throw error;
     } finally {
       await queryRunner.release();
-      console.log("Db session released");
     }
   }
 }

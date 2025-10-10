@@ -7,3 +7,7 @@ export const updateProfileSchema = z.object({
 export const usernameAvailableCheckSchema = z.object({
   username: z.string().min(3),
 });
+
+export const setupPinSchema = z.object({
+  pin: z.string().length(6),
+});

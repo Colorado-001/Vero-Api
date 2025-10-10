@@ -132,4 +132,17 @@ export class UserEntity {
       this._updatedAt = new Date();
     }
   }
+
+  toJSON() {
+    return {
+      id: this._id,
+      email: this._email,
+      username: this._username,
+      address: this._smartAccountAddress,
+      enabled: this._enabled,
+      deployed: this._deployed,
+      implementation: this._implementation,
+      pinSetup: this._pinSetup,
+    };
+  }
 }

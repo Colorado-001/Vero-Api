@@ -2,6 +2,7 @@ import { Request } from "express";
 import * as z from "zod";
 import { ValidationError } from "../../../utils/errors/index.js";
 import {
+  setupPinSchema,
   updateProfileSchema,
   usernameAvailableCheckSchema,
 } from "../schemas/index.js";
@@ -26,6 +27,20 @@ export class UserValidator {
       usernameAvailableCheckSchema,
       req.params
     );
+
+    if (error) {
+      const combinedMessage = z.treeifyError(error);
+      throw new ValidationError(
+        "Invalid request input",
+        combinedMessage.errors
+      );
+    }
+
+    return data;
+  }
+
+  static validateSetupPin(req: Request) {
+    const { error, data } = z.safeParse(setupPinSchema, req.body);
 
     if (error) {
       const combinedMessage = z.treeifyError(error);

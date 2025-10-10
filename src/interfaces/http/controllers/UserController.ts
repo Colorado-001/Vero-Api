@@ -9,6 +9,7 @@ import { UserRepository } from "../../../infrastructure/typeorm/repositories/ind
 import {
   CheckUsernameAvailabilityUseCase,
   GetUserByIdUseCase,
+  SetupPinUseCase,
   UpdateUserProfileUseCase,
 } from "../../../application/usecases/index.js";
 import { UserValidator } from "../validators/UserValidator.js";
@@ -18,6 +19,22 @@ export class UserController {
     private readonly coreDeps: CoreDependencies,
     private readonly config: Env
   ) {}
+
+  setupMyPin = async (req: AuthRequest, res: Response) => {
+    const { pin } = UserValidator.validateSetupPin(req);
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const userRepo = new UserRepository(manager);
+
+        const useCase = new SetupPinUseCase(userRepo);
+
+        const result = await useCase.execute(pin, req.user.sub);
+
+        res.status(httpStatus.OK).json(result);
+      }
+    );
+  };
 
   getLoggedInUser = async (req: AuthRequest, res: Response) => {
     await this.coreDeps.persistenceSessionManager.executeInTransaction(

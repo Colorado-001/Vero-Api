@@ -5,3 +5,4 @@ export * from "./UpdateUserProfileUseCase.js";
 export * from "./LoginUseCase.js";
 export * from "./VerifyLoginUseCase.js";
 export * from "./CheckUsernameAvailabilityUseCase.js";
+export * from "./SetupPinUseCase.js";

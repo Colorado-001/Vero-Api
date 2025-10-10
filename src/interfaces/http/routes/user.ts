@@ -10,6 +10,18 @@ export function createUserRouter(coreDeps: CoreDependencies, config: Env) {
   const controller = new UserController(coreDeps, config);
 
   router.get(
+    "/username-check/:username",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.isUsernameAvailable)
+  );
+
+  router.post(
+    "/me/setup-pin",
+    checkUser(coreDeps.jwtService),
+    controller.setupMyPin
+  );
+
+  router.get(
     "/me",
     checkUser(coreDeps.jwtService),
     asyncHandler(controller.getLoggedInUser)
@@ -18,12 +30,6 @@ export function createUserRouter(coreDeps: CoreDependencies, config: Env) {
     "/me",
     checkUser(coreDeps.jwtService),
     asyncHandler(controller.updateMyProfile)
-  );
-
-  router.get(
-    "/username-check/:username",
-    checkUser(coreDeps.jwtService),
-    asyncHandler(controller.isUsernameAvailable)
   );
 
   return router;

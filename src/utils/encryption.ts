@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
@@ -39,4 +40,27 @@ export function decryptValue(key: string, encrypted: string): string {
   decrypted += decipher.final("utf8");
 
   return decrypted;
+}
+
+/**
+ * Hashes a plain-text password.
+ * @param password - The plain password to hash.
+ * @returns The hashed password.
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10); // 10 rounds is a good default
+  return bcrypt.hash(password, salt);
+}
+
+/**
+ * Compares a plain-text password with a hashed password.
+ * @param password - The plain password to verify.
+ * @param hashedPassword - The stored hashed password.
+ * @returns True if they match, false otherwise.
+ */
+export async function comparePassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
 }

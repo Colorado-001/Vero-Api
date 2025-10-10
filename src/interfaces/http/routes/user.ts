@@ -9,7 +9,16 @@ export function createUserRouter(coreDeps: CoreDependencies, config: Env) {
 
   const controller = new UserController(coreDeps, config);
 
-  router.get("/me", checkUser, asyncHandler(controller.getLoggedInUser));
+  router.get(
+    "/me",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.getLoggedInUser)
+  );
+  router.patch(
+    "/me",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.updateMyProfile)
+  );
 
   return router;
 }

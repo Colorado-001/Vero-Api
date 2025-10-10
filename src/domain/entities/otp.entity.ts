@@ -31,19 +31,24 @@ export class OtpEntity<Data extends object | undefined> {
     return otp;
   }
 
+  isExpired(): boolean {
+    const now = new Date();
+    const diffSeconds = (now.getTime() - this._createdAt.getTime()) / 1000;
+
+    const notExpired = diffSeconds < OTP_EXPIRY_SECONDS;
+
+    return !notExpired;
+  }
+
   /**
    * Validates the OTP code and expiry.
    * @param code The OTP code to check.
    * @returns true if valid, false otherwise.
    */
   validate(code: string): boolean {
-    const now = new Date();
-    const diffSeconds = (now.getTime() - this._createdAt.getTime()) / 1000;
-
-    const notExpired = diffSeconds < OTP_EXPIRY_SECONDS;
     const isMatch = this._code === code;
 
-    return notExpired && isMatch;
+    return !this.isExpired() && isMatch;
   }
 
   get id(): string {

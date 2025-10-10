@@ -12,8 +12,7 @@
     "dev": "tsx watch src/main.ts",
     "typeorm": "npm run build:common && ts-node ./node_modules/typeorm/cli.js --dataSource ./dist-common/infrastructure/typeorm/typeorm-cli-data-source.js",
     "typeorm:migrate": "npm run typeorm -- migration:run && npm run clean:common ",
-    "typeorm:migrate:prod": "NODE_ENV=production node --loader ts-node/esm ./node_modules/typeorm/cli.js --dataSource ./dist/api/infrastructure/typeorm/typeorm-cli-data-source.js migration:run",
-    "typeorm:generate": "npm run typeorm -- migration:generate ./src/infrastructure/typeorm/migrations/migration",
+    "typeorm:generate": "npm run typeorm -- migration:generate ./src/infrastructure/typeorm/migrations/migration && npm run clean:common",
     "typeorm:revert": "npm run typeorm -- migration:revert"
   },
   "keywords": [],

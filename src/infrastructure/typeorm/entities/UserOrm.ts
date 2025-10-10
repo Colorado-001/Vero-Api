@@ -41,6 +41,12 @@ export class UserOrmEntity {
   @Column({ type: "boolean", default: true })
   enabled!: boolean;
 
+  @Column({ type: "boolean", default: false })
+  pinSetup!: boolean;
+
+  @Column({ type: "varchar", nullable: true })
+  pin!: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

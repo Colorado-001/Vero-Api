@@ -9,7 +9,11 @@ export function createAuthRouter(coreDeps: CoreDependencies, config: Env) {
 
   const controller = new AuthController(coreDeps, config);
 
-  router.post("/signup/email", checkUser, asyncHandler(controller.signupEmail));
+  router.post("/signup/email", asyncHandler(controller.signupEmail));
+  router.post(
+    "/signup/email/verify",
+    asyncHandler(controller.verifySignupEmail)
+  );
 
   return router;
 }

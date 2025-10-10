@@ -6,4 +6,9 @@ export type UserDto = {
   enabled: boolean;
   deployed: boolean;
   implementation: string;
+  pinSetup: boolean;
+};
+
+export type UpdateUserProfileDto = {
+  username?: string | null;
 };

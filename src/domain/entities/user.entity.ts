@@ -9,6 +9,8 @@ export class UserEntity {
   private _email!: string;
   private _username!: string | null;
   private _privateKey!: string;
+  private _pinSetup!: boolean;
+  private _pin!: string | null;
   private _smartAccountAddress!: BlockchainAddress;
   private _ownerEOA!: BlockchainAddress;
   private _implementation!: SmartAccountImplementation;
@@ -31,11 +33,13 @@ export class UserEntity {
     deployed: boolean,
     email: string,
     username?: string,
+    pin?: string,
     orm?: {
       id: string;
       createdAt: Date;
       updatedAt: Date;
       enabled: boolean;
+      pinSetup: boolean;
     }
   ) {
     const user = orm
@@ -50,6 +54,8 @@ export class UserEntity {
     user._enabled = orm?.enabled ?? false;
     user._email = email;
     user._username = username ?? null;
+    user._pin = pin ?? null;
+    user._pinSetup = orm?.pinSetup ?? Boolean(pin);
 
     return user;
   }
@@ -87,6 +93,12 @@ export class UserEntity {
   get updatedAt() {
     return this._updatedAt;
   }
+  get pin() {
+    return this._pin;
+  }
+  get pinSetup() {
+    return this._pinSetup;
+  }
 
   enable() {
     this._enabled = true;
@@ -96,5 +108,28 @@ export class UserEntity {
   disable() {
     this._enabled = false;
     this._updatedAt = new Date();
+  }
+
+  setPin(pin: string) {
+    this._pin = pin;
+    this._pinSetup = true;
+    this._updatedAt = new Date();
+  }
+
+  update(
+    data: Partial<{
+      username: string | null;
+    }>
+  ) {
+    let changed = false;
+
+    if (data.username !== undefined && data.username !== this._username) {
+      this._username = data.username;
+      changed = true;
+    }
+
+    if (changed) {
+      this._updatedAt = new Date();
+    }
   }
 }

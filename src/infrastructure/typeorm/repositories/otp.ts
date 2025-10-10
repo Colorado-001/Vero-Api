@@ -2,7 +2,6 @@ import { EntityManager, Repository } from "typeorm";
 import { OtpOrmEntity } from "../entities/index.js";
 import { OtpEntity } from "../../../domain/entities/index.js";
 import { OtpType } from "../../../types/common.js";
-import { OTP_EXPIRY_SECONDS } from "../../../utils/constants.js";
 import { IOtpRepository } from "../../../domain/repositories/index.js";
 
 export class OtpRepository implements IOtpRepository {
@@ -31,7 +30,12 @@ export class OtpRepository implements IOtpRepository {
     token: string,
     type: OtpType
   ): Promise<OtpEntity<Data> | null> {
-    const record = await this.repo.findOne({ where: { token, type } });
+    const record = await this.repo.findOne({
+      where: { token, type },
+      order: {
+        createdAt: "DESC",
+      },
+    });
     if (!record) return null;
 
     const entity = OtpEntity.create<Data>(
@@ -42,13 +46,6 @@ export class OtpRepository implements IOtpRepository {
       record.id,
       record.createdAt
     );
-
-    // auto-delete expired OTPs
-    const diff = (Date.now() - record.createdAt.getTime()) / 1000;
-    if (diff > OTP_EXPIRY_SECONDS) {
-      await this.delete(token, type);
-      return null;
-    }
 
     return entity;
   }

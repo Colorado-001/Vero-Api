@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 
 import { getCoreDependencies } from "../../config/factory.js";
-import { createAuthRouter } from "./routes/index.js";
+import { createAuthRouter, createUserRouter } from "./routes/index.js";
 import { Env } from "../../config/env.js";
 import { errorConverter, errorHandler } from "./middlewares/index.js";
 
@@ -22,15 +22,15 @@ export async function createHTTPServer(config: Env) {
           if (valid) {
             callback(null, staticOrigin);
           }
+        } else {
+          callback(Error("Invalid origin"));
         }
-
-        callback(Error("Invalid origin"));
       },
     })
   );
 
   app.use("/v1/auth", createAuthRouter(coreDeps, config));
-  app.use("/v1/users");
+  app.use("/v1/users", createUserRouter(coreDeps, config));
 
   app.use("/healthz", (_, res) => {
     res.status(200).json({ message: "Server is healthy!" });

@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { validateEnv } from "./config/env.js";
 import { createHTTPServer } from "./interfaces/http/server.js";
 
+const MEM_LOG_INTERVAL = 1000 * 60 * 5;
+
 (async () => {
   const interval = setInterval(() => {
     const mem = process.memoryUsage();
@@ -10,7 +12,7 @@ import { createHTTPServer } from "./interfaces/http/server.js";
       (mem.heapUsed / 1024 / 1024).toFixed(2),
       "MB"
     );
-  }, 5000);
+  }, MEM_LOG_INTERVAL);
 
   try {
     const config = validateEnv(process.env);

@@ -20,6 +20,7 @@ export class GetUserByIdUseCase {
       enabled: user.deployed,
       implementation: user.implementation,
       username: user.username,
+      pinSetup: user.pinSetup,
     };
   }
 }

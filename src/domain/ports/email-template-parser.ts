@@ -1,4 +1,4 @@
-import { EmailTypeDataMapping } from "../../types/email";
+import { EmailTypeDataMapping } from "../../types/email.js";
 
 export interface IEmailTemplateParser {
   getBody<Key extends keyof EmailTypeDataMapping>(

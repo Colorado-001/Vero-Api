@@ -1,10 +1,10 @@
 import { Request } from "express";
 import * as z from "zod";
-import { ValidationError } from "../../../utils/errors";
+import { ValidationError } from "../../../utils/errors/index.js";
 import {
   setupUserWithEmailSchema,
   verifySetupUserWithEmailSchema,
-} from "../schemas";
+} from "../schemas/index.js";
 
 export class AuthValidator {
   static validateEmailSignup(req: Request) {

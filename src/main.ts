@@ -1,5 +1,6 @@
-import { validateEnv } from "./config/env";
-import { createHTTPServer } from "./interfaces/http/server";
+import "reflect-metadata";
+import { validateEnv } from "./config/env.js";
+import { createHTTPServer } from "./interfaces/http/server.js";
 
 (async () => {
   const interval = setInterval(() => {

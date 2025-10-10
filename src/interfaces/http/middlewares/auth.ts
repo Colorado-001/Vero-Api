@@ -1,6 +1,6 @@
-import { JwtService } from "../../../application/services";
-import { UnauthorizedError } from "../../../utils/errors";
-import { asyncHandler } from "./async-handler";
+import { JwtService } from "../../../application/services/index.js";
+import { UnauthorizedError } from "../../../utils/errors/index.js";
+import { asyncHandler } from "./async-handler.js";
 
 const excludePaths = ["/docs", "/docs/"];
 

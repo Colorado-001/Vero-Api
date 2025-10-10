@@ -1,9 +1,12 @@
-import { UserEntity } from "../../domain/entities";
-import { IUserRepository, IOtpRepository } from "../../domain/repositories";
-import { EmailSignupOtpData } from "../../types/common";
-import { BadRequestError, ConflictError } from "../../utils/errors";
-import { VerifyEmailSignupDto } from "../dto";
-import { JwtService, WalletSetupService } from "../services";
+import { UserEntity } from "../../domain/entities/index.js";
+import {
+  IUserRepository,
+  IOtpRepository,
+} from "../../domain/repositories/index.js";
+import { EmailSignupOtpData } from "../../types/common.js";
+import { BadRequestError, ConflictError } from "../../utils/errors/index.js";
+import { VerifyEmailSignupDto } from "../dto/index.js";
+import { JwtService, WalletSetupService } from "../services/index.js";
 
 export class VerifyEmailSignupUseCase {
   constructor(

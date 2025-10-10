@@ -1,2 +1,2 @@
-export * from "./otp.entity";
-export * from "./user.entity";
+export * from "./otp.entity.js";
+export * from "./user.entity.js";

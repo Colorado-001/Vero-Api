@@ -1,1 +1,1 @@
-export * from "./mock-notification-service";
+export * from "./mock-notification-service.js";

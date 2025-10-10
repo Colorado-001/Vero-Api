@@ -2,7 +2,7 @@ import { v4 as uuid4 } from "uuid";
 import {
   BlockchainAddress,
   SmartAccountImplementation,
-} from "../../types/blockchain";
+} from "../../types/blockchain.js";
 
 export class UserEntity {
   private readonly _id!: string;

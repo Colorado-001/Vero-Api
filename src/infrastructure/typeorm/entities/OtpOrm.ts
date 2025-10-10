@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
   Index,
 } from "typeorm";
-import { OtpType } from "../../../types/common";
+import { OtpType } from "../../../types/common.js";
 
 @Entity({ name: "otps" })
 @Index(["token", "type"])
@@ -13,13 +13,13 @@ export class OtpOrmEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   code!: string;
 
   @Column({ type: "jsonb", nullable: true })
   data!: any;
 
-  @Column()
+  @Column("varchar")
   token!: string;
 
   @Column({ type: "varchar" })

@@ -1,11 +1,17 @@
 import { v4 as uuid4 } from "uuid";
-import { OtpEntity } from "../../domain/entities";
-import { IEmailTemplateParser, INotificationService } from "../../domain/ports";
-import { IOtpRepository, IUserRepository } from "../../domain/repositories";
-import { EmailSignupOtpData } from "../../types/common";
-import { ConflictError } from "../../utils/errors";
-import { generateSecureOtp } from "../../utils/helpers";
-import { EmailSignupDto } from "../dto";
+import { OtpEntity } from "../../domain/entities/index.js";
+import {
+  IEmailTemplateParser,
+  INotificationService,
+} from "../../domain/ports/index.js";
+import {
+  IOtpRepository,
+  IUserRepository,
+} from "../../domain/repositories/index.js";
+import { EmailSignupOtpData } from "../../types/common.js";
+import { ConflictError } from "../../utils/errors/index.js";
+import { generateSecureOtp } from "../../utils/helpers.js";
+import { EmailSignupDto } from "../dto/index.js";
 
 export class SetupEmailSignupUseCase {
   constructor(

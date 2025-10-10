@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import { ErrorRequestHandler } from "express";
-import { AppError } from "../../../utils/errors/app-error";
+import { AppError } from "../../../utils/errors/app-error.js";
 
 export const errorConverter: ErrorRequestHandler = (err, req, res, next) => {
   let error = err;

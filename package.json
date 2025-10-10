@@ -6,11 +6,13 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsc",
+    "clean:common": "rimraf dist-common",
+    "build:common": "npm run clean:common && tsc --project tsconfig.modules.json",
     "start:api": "NODE_ENV=production node dist/main.js",
-    "dev": "ts-node-dev --respawn src/main.ts",
-    "typeorm": "npx typeorm-ts-node-commonjs --dataSource ./src/infrastructure/typeorm/typeorm-cli-data-source.ts",
-    "typeorm:migrate": "npm run typeorm -- migration:run",
-    "typeorm:migrate:prod": "NODE_ENV=production npx typeorm-ts-node-commonjs --dataSource ./dist/api/infrastructure/typeorm/typeorm-cli-data-source.js migration:run",
+    "dev": "tsx watch src/main.ts",
+    "typeorm": "npm run build:common && ts-node ./node_modules/typeorm/cli.js --dataSource ./dist-common/infrastructure/typeorm/typeorm-cli-data-source.js",
+    "typeorm:migrate": "npm run typeorm -- migration:run && npm run clean:common ",
+    "typeorm:migrate:prod": "NODE_ENV=production node --loader ts-node/esm ./node_modules/typeorm/cli.js --dataSource ./dist/api/infrastructure/typeorm/typeorm-cli-data-source.js migration:run",
     "typeorm:generate": "npm run typeorm -- migration:generate ./src/infrastructure/typeorm/migrations/migration",
     "typeorm:revert": "npm run typeorm -- migration:revert"
   },
@@ -23,7 +25,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.0",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {

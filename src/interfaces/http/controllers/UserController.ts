@@ -3,7 +3,7 @@ import { Response } from "express";
 import { EntityManager } from "typeorm";
 
 import { AuthRequest } from "../express.js";
-import { AuthValidator } from "../validators/AuthValidator.js";
+import { AuthValidator } from "../validators/index.js";
 import { Env } from "../../../config/env.js";
 import { CoreDependencies } from "../../../config/factory.js";
 import {
@@ -11,34 +11,26 @@ import {
   UserRepository,
 } from "../../../infrastructure/typeorm/repositories/index.js";
 import {
-  SetupEmailSignupUseCase,
+  GetUserByIdUseCase,
   VerifyEmailSignupUseCase,
 } from "../../../application/usecases/index.js";
 
-export class AuthController {
+export class UserController {
   constructor(
     private readonly coreDeps: CoreDependencies,
     private readonly config: Env
   ) {}
 
-  signupEmail = async (req: AuthRequest, res: Response) => {
-    const { email } = AuthValidator.validateEmailSignup(req);
-
+  getLoggedInUser = async (req: AuthRequest, res: Response) => {
     await this.coreDeps.persistenceSessionManager.executeInTransaction(
       async (manager: EntityManager) => {
         const userRepo = new UserRepository(manager);
-        const otpRepo = new OtpRepository(manager);
 
-        const useCase = new SetupEmailSignupUseCase(
-          otpRepo,
-          userRepo,
-          this.coreDeps.emailTemplateParser,
-          this.coreDeps.notificationService
-        );
+        const useCase = new GetUserByIdUseCase(userRepo);
 
-        const token = await useCase.execute({ email });
+        const user = await useCase.execute(req.user.sub);
 
-        res.status(httpStatus.OK).json({ token });
+        res.status(httpStatus.OK).json({ ...user });
       }
     );
   };

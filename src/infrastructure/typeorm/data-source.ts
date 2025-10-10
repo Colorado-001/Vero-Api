@@ -1,6 +1,10 @@
 import path from "path";
+// import { fileURLToPath } from "url";
 import { DataSource } from "typeorm";
-import { Env } from "../../config/env";
+import { Env } from "../../config/env.js";
+
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 export async function initializeDataSource(env: Env): Promise<DataSource> {
   const dataSource = new DataSource({

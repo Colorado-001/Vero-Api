@@ -1,7 +1,7 @@
 import { EntityManager, Repository } from "typeorm";
-import { UserOrmEntity } from "../entities";
-import { UserEntity } from "../../../domain/entities";
-import { IUserRepository } from "../../../domain/repositories";
+import { UserOrmEntity } from "../entities/index.js";
+import { UserEntity } from "../../../domain/entities/index.js";
+import { IUserRepository } from "../../../domain/repositories/index.js";
 
 export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserOrmEntity>;

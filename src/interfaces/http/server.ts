@@ -1,10 +1,10 @@
 import express from "express";
 import cors from "cors";
 
-import { getCoreDependencies } from "../../config/factory";
-import { createAuthRouter } from "./routes";
-import { Env } from "../../config/env";
-import { errorConverter, errorHandler } from "./middlewares";
+import { getCoreDependencies } from "../../config/factory.js";
+import { createAuthRouter } from "./routes/index.js";
+import { Env } from "../../config/env.js";
+import { errorConverter, errorHandler } from "./middlewares/index.js";
 
 const ALLOWED_ORIGINS = ["http://localhost:5173"];
 
@@ -30,6 +30,7 @@ export async function createHTTPServer(config: Env) {
   );
 
   app.use("/v1/auth", createAuthRouter(coreDeps, config));
+  app.use("/v1/users");
 
   app.use("/healthz", (_, res) => {
     res.status(200).json({ message: "Server is healthy!" });

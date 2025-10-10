@@ -1,6 +1,6 @@
 import { v4 as uuid4 } from "uuid";
-import { OTP_EXPIRY_SECONDS } from "../../utils/constants";
-import { OtpType } from "../../types/common";
+import { OTP_EXPIRY_SECONDS } from "../../utils/constants.js";
+import { OtpType } from "../../types/common.js";
 
 export class OtpEntity<Data extends object | undefined> {
   private readonly _id: string;

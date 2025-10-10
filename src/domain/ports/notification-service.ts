@@ -1,5 +1,3 @@
-import { EmailTypeDataMapping } from "../../types/common";
-
 export interface INotificationService {
   sendEmail(
     body: string,

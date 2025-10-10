@@ -1,20 +1,23 @@
 import { createPublicClient, http } from "viem";
 import { monadTestnet as chain } from "viem/chains";
 
-import { Env } from "./env";
+import { Env } from "./env.js";
 import {
   closeDataSource,
   initializeDataSource,
-} from "../infrastructure/typeorm/data-source";
+} from "../infrastructure/typeorm/data-source.js";
 import {
   IEmailTemplateParser,
   INotificationService,
   IPersistenceSessionManager,
-} from "../domain/ports";
-import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager";
-import { MockEmailTemplateParser } from "../infrastructure/email";
-import { MockNotificationService } from "../infrastructure/notification";
-import { JwtService, WalletSetupService } from "../application/services";
+} from "../domain/ports/index.js";
+import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
+import { MockEmailTemplateParser } from "../infrastructure/email/index.js";
+import { MockNotificationService } from "../infrastructure/notification/index.js";
+import {
+  JwtService,
+  WalletSetupService,
+} from "../application/services/index.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;

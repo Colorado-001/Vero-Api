@@ -1,4 +1,4 @@
-import { INotificationService } from "../../domain/ports";
+import { INotificationService } from "../../domain/ports/index.js";
 
 export class MockNotificationService implements INotificationService {
   async sendEmail(

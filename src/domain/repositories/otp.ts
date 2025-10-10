@@ -1,5 +1,5 @@
-import { OtpEntity } from "../entities/otp.entity";
-import { OtpType } from "../../types/common";
+import { OtpEntity } from "../entities/index.js";
+import { OtpType } from "../../types/common.js";
 
 export interface IOtpRepository {
   save<Data extends object | undefined>(otp: OtpEntity<Data>): Promise<void>;

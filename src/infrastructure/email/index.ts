@@ -1,1 +1,1 @@
-export * from "./mock-template-parser";
+export * from "./mock-template-parser.js";

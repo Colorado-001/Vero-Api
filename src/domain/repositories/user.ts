@@ -1,4 +1,4 @@
-import { UserEntity } from "../entities/user.entity";
+import { UserEntity } from "../entities/index.js";
 
 export interface IUserRepository {
   save(user: UserEntity): Promise<void>;

@@ -4,8 +4,8 @@ import {
 } from "@metamask/delegation-toolkit";
 import { PublicClient } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { SmartAccountImplementation } from "../../types/blockchain";
-import { encryptValue } from "../../utils/encryption";
+import { SmartAccountImplementation } from "../../types/blockchain.js";
+import { encryptValue } from "../../utils/encryption.js";
 
 export class WalletSetupService {
   constructor(

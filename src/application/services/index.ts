@@ -1,2 +1,2 @@
-export * from "./wallet-setup-service";
-export * from "./jwt";
+export * from "./wallet-setup-service.js";
+export * from "./jwt.js";

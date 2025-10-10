@@ -1,6 +1,6 @@
-import { IEmailTemplateParser } from "../../domain/ports";
-import { EmailTypeDataMapping } from "../../types/email";
-import { InternalServerError } from "../../utils/errors";
+import { IEmailTemplateParser } from "../../domain/ports/index.js";
+import { EmailTypeDataMapping } from "../../types/email.js";
+import { InternalServerError } from "../../utils/errors/index.js";
 
 export class MockEmailTemplateParser implements IEmailTemplateParser {
   async getBody<Key extends keyof EmailTypeDataMapping>(

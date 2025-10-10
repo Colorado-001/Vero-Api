@@ -1,9 +1,9 @@
 import { EntityManager, Repository } from "typeorm";
-import { OtpOrmEntity } from "../entities";
-import { OtpEntity } from "../../../domain/entities";
-import { OtpType } from "../../../types/common";
-import { OTP_EXPIRY_SECONDS } from "../../../utils/constants";
-import { IOtpRepository } from "../../../domain/repositories";
+import { OtpOrmEntity } from "../entities/index.js";
+import { OtpEntity } from "../../../domain/entities/index.js";
+import { OtpType } from "../../../types/common.js";
+import { OTP_EXPIRY_SECONDS } from "../../../utils/constants.js";
+import { IOtpRepository } from "../../../domain/repositories/index.js";
 
 export class OtpRepository implements IOtpRepository {
   private readonly repo: Repository<OtpOrmEntity>;

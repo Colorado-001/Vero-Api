@@ -1,6 +1,6 @@
-import { IUserRepository } from "../../domain/repositories";
-import { NotFoundError } from "../../utils/errors";
-import { UserDto } from "../dto";
+import { IUserRepository } from "../../domain/repositories/index.js";
+import { NotFoundError } from "../../utils/errors/index.js";
+import { UserDto } from "../dto/index.js";
 
 export class GetUserByIdUseCase {
   constructor(private readonly userRepo: IUserRepository) {}

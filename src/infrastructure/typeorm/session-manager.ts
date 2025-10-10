@@ -1,5 +1,5 @@
 import { DataSource, EntityManager } from "typeorm";
-import { IPersistenceSessionManager } from "../../domain/ports";
+import { IPersistenceSessionManager } from "../../domain/ports/index.js";
 
 export class TypeORMSessionManager implements IPersistenceSessionManager {
   constructor(private readonly dataSource: DataSource) {}

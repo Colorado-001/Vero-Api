@@ -9,7 +9,7 @@ import {
 import {
   BlockchainAddress,
   SmartAccountImplementation,
-} from "../../../types/blockchain";
+} from "../../../types/blockchain.js";
 
 @Entity({ name: "users" })
 @Index(["smartAccountAddress", "ownerEOA"], { unique: true })
@@ -17,7 +17,7 @@ export class UserOrmEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: "varchar" })
   email!: string;
 
   @Column({ unique: true, type: "varchar", nullable: true })

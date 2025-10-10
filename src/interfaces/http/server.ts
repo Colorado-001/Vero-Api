@@ -6,7 +6,10 @@ import { createAuthRouter, createUserRouter } from "./routes/index.js";
 import { Env } from "../../config/env.js";
 import { errorConverter, errorHandler } from "./middlewares/index.js";
 
-const ALLOWED_ORIGINS = ["http://localhost:5173"];
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://vero-clientui.pages.dev",
+];
 
 export async function createHTTPServer(config: Env) {
   const coreDeps = await getCoreDependencies(config);

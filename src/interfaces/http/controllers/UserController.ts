@@ -7,6 +7,7 @@ import { Env } from "../../../config/env.js";
 import { CoreDependencies } from "../../../config/factory.js";
 import { UserRepository } from "../../../infrastructure/typeorm/repositories/index.js";
 import {
+  CheckUsernameAvailabilityUseCase,
   GetUserByIdUseCase,
   UpdateUserProfileUseCase,
 } from "../../../application/usecases/index.js";
@@ -32,6 +33,22 @@ export class UserController {
     );
   };
 
+  isUsernameAvailable = async (req: AuthRequest, res: Response) => {
+    const { username } = UserValidator.validateUsernameAvailableUpdate(req);
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const userRepo = new UserRepository(manager);
+
+        const useCase = new CheckUsernameAvailabilityUseCase(userRepo);
+
+        const result = await useCase.execute(username, req.user.sub);
+
+        res.status(httpStatus.OK).json(result);
+      }
+    );
+  };
+
   updateMyProfile = async (req: AuthRequest, res: Response) => {
     const data = UserValidator.validateProfileUpdate(req);
 
@@ -41,9 +58,9 @@ export class UserController {
 
         const useCase = new UpdateUserProfileUseCase(userRepo);
 
-        await useCase.execute(data, req.user.sub);
+        const user = await useCase.execute(data, req.user.sub);
 
-        res.status(httpStatus.OK).json({ success: true });
+        res.status(httpStatus.OK).json(user);
       }
     );
   };

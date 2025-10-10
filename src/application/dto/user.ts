@@ -12,3 +12,8 @@ export type UserDto = {
 export type UpdateUserProfileDto = {
   username?: string | null;
 };
+
+export type UsernameAvailabilityResDto = {
+  isAvailable: boolean;
+  isYou: boolean;
+};

@@ -20,5 +20,11 @@ export function createUserRouter(coreDeps: CoreDependencies, config: Env) {
     asyncHandler(controller.updateMyProfile)
   );
 
+  router.get(
+    "/username-check/:username",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.isUsernameAvailable)
+  );
+
   return router;
 }

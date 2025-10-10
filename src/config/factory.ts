@@ -18,6 +18,8 @@ import {
   JwtService,
   WalletSetupService,
 } from "../application/services/index.js";
+import { createNotificationService } from "../infrastructure/factories/notification-service.factory.js";
+import { createEmailTemplateParserService } from "../infrastructure/factories/email-template-parser.factory.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -51,8 +53,8 @@ export async function getCoreDependencies(
 
   instance = {
     persistenceSessionManager,
-    emailTemplateParser: new MockEmailTemplateParser(),
-    notificationService: new MockNotificationService(),
+    emailTemplateParser: createEmailTemplateParserService(config),
+    notificationService: createNotificationService(config),
     walletSetupService: walletService,
     jwtService: new JwtService(config.JWT_SECRET),
 

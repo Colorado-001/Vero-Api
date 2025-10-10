@@ -32,6 +32,9 @@ const envSchema = z.object({
   RPC_URL: z.url(),
   ENCRYPTION_KEY: z.string(),
   JWT_SECRET: z.string(),
+
+  NOTIFICATION_SERVICE: z.enum(["mock", "mailgun"]),
+  EMAIL_TEMPLATE_PARSER_SERVICE: z.enum(["mock", "file"]),
 });
 
 export type Env = z.infer<typeof envSchema>;

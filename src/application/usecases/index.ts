@@ -6,3 +6,4 @@ export * from "./LoginUseCase.js";
 export * from "./VerifyLoginUseCase.js";
 export * from "./CheckUsernameAvailabilityUseCase.js";
 export * from "./SetupPinUseCase.js";
+export * from "./GetPortfolioUseCase.js";

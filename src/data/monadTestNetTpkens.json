@@ -1,0 +1,42 @@
+[
+  {
+    "address": "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea",
+    "name": "USD Coin (Testnet)",
+    "symbol": "USDC",
+    "decimals": 6,
+    "coingeckoId": "usd-coin",
+    "logoURI": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png"
+  },
+  {
+    "address": "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D",
+    "name": "Tether (Testnet)",
+    "symbol": "USDT",
+    "decimals": 6,
+    "coingeckoId": "tether",
+    "logoURI": "https://assets.coingecko.com/coins/images/325/large/Tether-logo.png"
+  },
+  {
+    "address": "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37",
+    "name": "Wrapped Ether (Testnet)",
+    "symbol": "WETH",
+    "decimals": 18,
+    "coingeckoId": "weth",
+    "logoURI": "https://assets.coingecko.com/coins/images/2518/large/weth.png"
+  },
+  {
+    "address": "0xcf5a6076cfa32686c0Df13aBaDa2b40dec133F1d",
+    "name": "Wrapped Bitcoin (Testnet)",
+    "symbol": "WBTC",
+    "decimals": 8,
+    "coingeckoId": "wrapped-bitcoin",
+    "logoURI": "https://assets.coingecko.com/coins/images/7598/large/wrapped_bitcoin_wbtc.png"
+  },
+  {
+    "address": "0x5387C85A4965769f6B0Df430638a1388493486F1",
+    "name": "Wrapped SOL (Testnet)",
+    "symbol": "WSOL",
+    "decimals": 9,
+    "coingeckoId": "solana",
+    "logoURI": "https://assets.coingecko.com/coins/images/4128/large/solana.png"
+  }
+]

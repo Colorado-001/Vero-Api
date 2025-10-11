@@ -16,6 +16,8 @@ import { MockEmailTemplateParser } from "../infrastructure/email/index.js";
 import { MockNotificationService } from "../infrastructure/notification/index.js";
 import {
   JwtService,
+  PortfolioValueService,
+  TokenBalanceService,
   WalletSetupService,
 } from "../application/services/index.js";
 import { createNotificationService } from "../infrastructure/factories/notification-service.factory.js";
@@ -27,6 +29,7 @@ export type CoreDependencies = {
   notificationService: INotificationService;
   walletSetupService: WalletSetupService;
   jwtService: JwtService;
+  portfolioService: PortfolioValueService;
   close: () => Promise<void>;
 };
 
@@ -57,6 +60,9 @@ export async function getCoreDependencies(
     notificationService: createNotificationService(config),
     walletSetupService: walletService,
     jwtService: new JwtService(config.JWT_SECRET),
+    portfolioService: new PortfolioValueService(
+      new TokenBalanceService(publicClient)
+    ),
 
     close: async () => {
       try {

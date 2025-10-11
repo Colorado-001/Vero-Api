@@ -14,22 +14,19 @@ export class PortfolioValueService {
     totalUsdValue: number;
   }> {
     // 1. Fetch balances
-    const [native, tokens] = await Promise.all([
-      this.tokenBalanceService.getNativeBalance(walletAddress),
-      this.tokenBalanceService.getTokenBalances(walletAddress),
-    ]);
+    const tokens = await this.tokenBalanceService.getTokenBalances(
+      walletAddress
+    );
 
     // 2. Fetch USD prices
     const symbols = tokens.map((t) => t.coingeckoId || t.symbol.toLowerCase());
     const prices = await this.fetchUsdPrices(symbols);
+    console.log(prices);
 
     // 3. Map balances to USD values
-    const assets: AssetValueDto[] = [
-      this.toAssetValue(native, prices[native.symbol]),
-      ...tokens.map((t) =>
-        this.toAssetValue(t, prices[t.coingeckoId || t.symbol.toLowerCase()])
-      ),
-    ];
+    const assets: AssetValueDto[] = tokens.map((t) =>
+      this.toAssetValue(t, prices[t.coingeckoId || t.symbol.toLowerCase()])
+    );
 
     // 4. Sum total USD value
     const totalUsdValue = assets.reduce((sum, a) => sum + a.usdValue, 0);

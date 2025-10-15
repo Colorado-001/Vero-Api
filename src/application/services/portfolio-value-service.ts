@@ -14,24 +14,46 @@ export class PortfolioValueService {
     totalUsdValue: number;
   }> {
     // 1. Fetch balances
-    const tokens = await this.tokenBalanceService.getTokenBalances(
-      walletAddress
-    );
+    const [native, tokens] = await Promise.all([
+      this.tokenBalanceService.getNativeBalance(walletAddress),
+      this.tokenBalanceService.getTokenBalances(walletAddress),
+    ]);
 
     // 2. Fetch USD prices
-    const symbols = tokens.map((t) => t.coingeckoId || t.symbol.toLowerCase());
+    const symbols = [
+      native.coingeckoId || native.symbol.toLowerCase(),
+      ...tokens.map((t) => t.coingeckoId || t.symbol.toLowerCase()),
+    ];
     const prices = await this.fetchUsdPrices(symbols);
-    console.log(prices);
+
+    // Temporary override
+    if (prices["monad"] === 0 && Boolean(prices["weth"])) {
+      prices["monad"] = prices["weth"];
+    }
+    console.log("[prices]", prices, native, tokens);
 
     // 3. Map balances to USD values
-    const assets: AssetValueDto[] = tokens.map((t) =>
-      this.toAssetValue(t, prices[t.coingeckoId || t.symbol.toLowerCase()])
-    );
+    const assets: AssetValueDto[] = [
+      this.toAssetValue(
+        native,
+        prices[native.coingeckoId || native.symbol.toLowerCase()]
+      ),
+      ...tokens.map((t) =>
+        this.toAssetValue(t, prices[t.coingeckoId || t.symbol.toLowerCase()])
+      ),
+    ];
 
     // 4. Sum total USD value
     const totalUsdValue = assets.reduce((sum, a) => sum + a.usdValue, 0);
 
     return { assets, totalUsdValue };
+  }
+
+  private getDefaultPrice(id: string) {
+    // if (id === "monad") {
+    //   return 0.00009;
+    // }
+    return 0;
   }
 
   private async fetchUsdPrices(
@@ -50,7 +72,8 @@ export class PortfolioValueService {
 
       const prices: Record<string, number> = {};
       for (const symbol of symbols) {
-        prices[symbol] = data[symbol.toLowerCase()]?.usd ?? 0;
+        prices[symbol] =
+          data[symbol.toLowerCase()]?.usd ?? this.getDefaultPrice(symbol);
       }
       return prices;
     } catch (err) {

@@ -21,6 +21,7 @@ export type NativeBalanceDto = {
   logoURI: string;
   rawBalance: bigint;
   formattedBalance: string;
+  coingeckoId: string;
 };
 
 export type AssetValueDto = {

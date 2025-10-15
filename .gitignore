@@ -6,3 +6,4 @@ dist-*/
 cli/
 build/
 .todo
+staticwallet.txt

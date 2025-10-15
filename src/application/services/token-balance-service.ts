@@ -63,6 +63,7 @@ export class TokenBalanceService {
         logoURI: "https://assets.monad.xyz/mon.png",
         rawBalance,
         formattedBalance: formatted,
+        coingeckoId: "monad",
       };
     } catch (err) {
       console.warn("Failed to fetch native MON balance:", err);
@@ -73,6 +74,7 @@ export class TokenBalanceService {
         logoURI: "https://assets.monad.xyz/mon.png",
         rawBalance: BigInt(0),
         formattedBalance: "0",
+        coingeckoId: "monad",
       };
     }
   }

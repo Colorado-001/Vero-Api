@@ -35,6 +35,7 @@ const envSchema = z.object({
 
   NOTIFICATION_SERVICE: z.enum(["mock", "mailgun"]),
   EMAIL_TEMPLATE_PARSER_SERVICE: z.enum(["mock", "file"]),
+  COINGECKO_API_KEY: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

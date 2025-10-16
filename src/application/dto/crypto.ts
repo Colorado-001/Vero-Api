@@ -35,5 +35,5 @@ export type AssetValueDto = {
 
 export type GetPortfolioResDto = {
   assets: AssetValueDto[];
-  usdBalance: number;
+  usdBalance: string;
 };

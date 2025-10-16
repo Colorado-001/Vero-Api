@@ -61,7 +61,8 @@ export async function getCoreDependencies(
     walletSetupService: walletService,
     jwtService: new JwtService(config.JWT_SECRET),
     portfolioService: new PortfolioValueService(
-      new TokenBalanceService(publicClient)
+      new TokenBalanceService(publicClient),
+      config.COINGECKO_API_KEY
     ),
 
     close: async () => {

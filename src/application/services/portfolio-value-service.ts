@@ -7,11 +7,14 @@ import {
 } from "../dto/crypto";
 
 export class PortfolioValueService {
-  constructor(private readonly tokenBalanceService: TokenBalanceService) {}
+  constructor(
+    private readonly tokenBalanceService: TokenBalanceService,
+    private readonly apiKey: string
+  ) {}
 
   async getPortfolioValue(walletAddress: Address): Promise<{
     assets: AssetValueDto[];
-    totalUsdValue: number;
+    totalUsdValue: string;
   }> {
     // 1. Fetch balances
     const [native, tokens] = await Promise.all([
@@ -46,7 +49,7 @@ export class PortfolioValueService {
     // 4. Sum total USD value
     const totalUsdValue = assets.reduce((sum, a) => sum + a.usdValue, 0);
 
-    return { assets, totalUsdValue };
+    return { assets, totalUsdValue: totalUsdValue.toFixed(2) };
   }
 
   private getDefaultPrice(id: string) {
@@ -66,7 +69,9 @@ export class PortfolioValueService {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${idsParam}&vs_currencies=usd`;
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: { "x-cg-demo-api-key": this.apiKey },
+      });
       if (!res.ok) throw new Error(`Failed to fetch prices: ${res.statusText}`);
       const data = await res.json();
 
@@ -94,7 +99,7 @@ export class PortfolioValueService {
       logoURI: token.logoURI,
       balance: token.formattedBalance,
       usdPrice,
-      usdValue,
+      usdValue: Number(usdValue.toFixed(2)),
     };
   }
 }

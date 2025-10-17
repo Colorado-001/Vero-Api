@@ -16,6 +16,7 @@ export class UserEntity {
   private _implementation!: SmartAccountImplementation;
   private _deployed!: boolean;
   private _enabled!: boolean;
+  private _qrDataUrl!: string | null;
   private readonly _createdAt!: Date;
   private _updatedAt!: Date;
 
@@ -32,6 +33,7 @@ export class UserEntity {
     implementation: SmartAccountImplementation,
     deployed: boolean,
     email: string,
+    qrDataUrl: string | null,
     username?: string,
     pin?: string,
     orm?: {
@@ -53,6 +55,7 @@ export class UserEntity {
     user._deployed = deployed;
     user._enabled = orm?.enabled ?? false;
     user._email = email;
+    user._qrDataUrl = qrDataUrl;
     user._username = username ?? null;
     user._pin = pin ?? null;
     user._pinSetup = orm?.pinSetup ?? Boolean(pin);
@@ -99,6 +102,9 @@ export class UserEntity {
   get pinSetup() {
     return this._pinSetup;
   }
+  get qrDataUrl() {
+    return this._qrDataUrl;
+  }
 
   enable() {
     this._enabled = true;
@@ -119,12 +125,18 @@ export class UserEntity {
   update(
     data: Partial<{
       username: string | null;
+      qrDataUrl: string | null;
     }>
   ) {
     let changed = false;
 
     if (data.username !== undefined && data.username !== this._username) {
       this._username = data.username;
+      changed = true;
+    }
+
+    if (data.qrDataUrl !== this._qrDataUrl && data.qrDataUrl !== undefined) {
+      this._qrDataUrl = data.qrDataUrl;
       changed = true;
     }
 
@@ -143,6 +155,7 @@ export class UserEntity {
       deployed: this._deployed,
       implementation: this._implementation,
       pinSetup: this._pinSetup,
+      qr: this._qrDataUrl,
     };
   }
 }

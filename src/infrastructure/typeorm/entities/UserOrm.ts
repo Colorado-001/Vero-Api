@@ -44,6 +44,9 @@ export class UserOrmEntity {
   @Column({ type: "boolean", default: false })
   pinSetup!: boolean;
 
+  @Column({ type: "text", nullable: true })
+  qrDataUrl: string | null = null;
+
   @Column({ type: "varchar", nullable: true })
   pin!: string | null;
 

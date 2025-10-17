@@ -7,6 +7,7 @@ export type UserDto = {
   deployed: boolean;
   implementation: string;
   pinSetup: boolean;
+  qr: string | null;
 };
 
 export type UpdateUserProfileDto = {

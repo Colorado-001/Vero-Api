@@ -18,6 +18,7 @@ export class UserRepository implements IUserRepository {
       record.implementation,
       record.deployed,
       record.email,
+      record.qrDataUrl,
       record.username ?? undefined,
       record.pin ?? undefined,
       {
@@ -47,6 +48,7 @@ export class UserRepository implements IUserRepository {
       username: user.username,
       pin: user.pin,
       pinSetup: user.pinSetup,
+      qrDataUrl: user.qrDataUrl,
     });
 
     await this.repo.save(record);

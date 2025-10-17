@@ -6,14 +6,19 @@ import {
 import { EmailSignupOtpData } from "../../types/common.js";
 import { BadRequestError, ConflictError } from "../../utils/errors/index.js";
 import { VerifyEmailSignupDto } from "../dto/index.js";
-import { JwtService, WalletSetupService } from "../services/index.js";
+import {
+  JwtService,
+  QrGeneratorService,
+  WalletSetupService,
+} from "../services/index.js";
 
 export class VerifyEmailSignupUseCase {
   constructor(
     private readonly otpRepo: IOtpRepository,
     private readonly userRepo: IUserRepository,
     private readonly walletService: WalletSetupService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly qrGenService: QrGeneratorService
   ) {}
 
   async execute(input: VerifyEmailSignupDto): Promise<string> {
@@ -33,13 +38,18 @@ export class VerifyEmailSignupUseCase {
 
     const walletData = await this.walletService.execute();
 
+    const qr = await this.qrGenService.generateCryptoAddressQR(
+      walletData.address
+    );
+
     const newUser = UserEntity.create(
       walletData.privateKey,
       walletData.address,
       walletData.eoaAccount,
       walletData.implementation,
       walletData.isDeployed,
-      otp.data.email
+      otp.data.email,
+      qr?.dataUrl || null
     );
 
     await this.otpRepo.delete(input.token, "emailSignup");

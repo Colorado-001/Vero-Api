@@ -100,7 +100,8 @@ export class AuthController {
           otpRepo,
           userRepo,
           this.coreDeps.walletSetupService,
-          this.coreDeps.jwtService
+          this.coreDeps.jwtService,
+          this.coreDeps.qrGenService
         );
 
         const access_token = await useCase.execute(data);

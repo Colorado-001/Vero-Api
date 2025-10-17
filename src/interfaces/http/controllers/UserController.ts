@@ -41,7 +41,10 @@ export class UserController {
       async (manager: EntityManager) => {
         const userRepo = new UserRepository(manager);
 
-        const useCase = new GetUserByIdUseCase(userRepo);
+        const useCase = new GetUserByIdUseCase(
+          userRepo,
+          this.coreDeps.qrGenService
+        );
 
         const user = await useCase.execute(req.user.sub);
 

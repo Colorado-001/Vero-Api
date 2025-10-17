@@ -23,6 +23,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default("localhost"),
 
+  LOG_LEVEL: z.enum(["info", "debug", "error"]).default("info"),
+  LOG_PATH: z.string().default("./logs"),
+  LOG_SILENT: z.boolean().default(false),
+
   DB_HOST: z.string(),
   DB_PORT: z.coerce.number(),
   DB_USERNAME: z.string(),
@@ -36,6 +40,8 @@ const envSchema = z.object({
   NOTIFICATION_SERVICE: z.enum(["mock", "mailgun"]),
   EMAIL_TEMPLATE_PARSER_SERVICE: z.enum(["mock", "file"]),
   COINGECKO_API_KEY: z.string(),
+  ALCHEMY_API_KEY: z.string(),
+  ALCHEMY_WEBHOOK_SIGNING_KEY: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

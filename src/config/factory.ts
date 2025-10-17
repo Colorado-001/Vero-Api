@@ -12,16 +12,16 @@ import {
   IPersistenceSessionManager,
 } from "../domain/ports/index.js";
 import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
-import { MockEmailTemplateParser } from "../infrastructure/email/index.js";
-import { MockNotificationService } from "../infrastructure/notification/index.js";
 import {
   JwtService,
   PortfolioValueService,
+  QrGeneratorService,
   TokenBalanceService,
   WalletSetupService,
 } from "../application/services/index.js";
 import { createNotificationService } from "../infrastructure/factories/notification-service.factory.js";
 import { createEmailTemplateParserService } from "../infrastructure/factories/email-template-parser.factory.js";
+import { cleanupLoggers } from "../logging/logger.config.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -30,6 +30,7 @@ export type CoreDependencies = {
   walletSetupService: WalletSetupService;
   jwtService: JwtService;
   portfolioService: PortfolioValueService;
+  qrGenService: QrGeneratorService;
   close: () => Promise<void>;
 };
 
@@ -64,10 +65,12 @@ export async function getCoreDependencies(
       new TokenBalanceService(publicClient),
       config.COINGECKO_API_KEY
     ),
+    qrGenService: new QrGeneratorService(config),
 
     close: async () => {
       try {
         await closeDataSource(dataSource);
+        cleanupLoggers();
       } catch (e) {
         console.warn("Failed to close data source", e);
       }

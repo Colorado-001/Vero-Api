@@ -31,6 +31,7 @@ export class UpdateUserProfileUseCase {
       implementation: user.implementation,
       username: user.username,
       pinSetup: user.pinSetup,
+      qr: user.qrDataUrl,
     };
   }
 }

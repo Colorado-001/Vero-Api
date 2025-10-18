@@ -5,6 +5,7 @@ import morgan_config from "../../logging/morgan.config";
 import { getCoreDependencies } from "../../config/factory.js";
 import {
   createAuthRouter,
+  createTransferRouter,
   createUserRouter,
   createWalletRouter,
   createWebhookRouter,
@@ -44,6 +45,11 @@ export async function createHTTPServer(config: Env) {
   app.use("/v1/auth", express.json(), createAuthRouter(coreDeps, config));
   app.use("/v1/users", express.json(), createUserRouter(coreDeps, config));
   app.use("/v1/wallet", express.json(), createWalletRouter(coreDeps, config));
+  app.use(
+    "/v1/transfer",
+    express.json(),
+    createTransferRouter(coreDeps, config)
+  );
   app.use("/webhooks", createWebhookRouter(config));
 
   app.use("/healthz", (_, res) => {

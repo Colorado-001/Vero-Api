@@ -7,3 +7,4 @@ export * from "./VerifyLoginUseCase.js";
 export * from "./CheckUsernameAvailabilityUseCase.js";
 export * from "./SetupPinUseCase.js";
 export * from "./GetPortfolioUseCase.js";
+export * from "./GetTransferGasUseCase.js";

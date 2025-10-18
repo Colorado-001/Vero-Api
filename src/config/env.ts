@@ -42,6 +42,7 @@ const envSchema = z.object({
   COINGECKO_API_KEY: z.string(),
   ALCHEMY_API_KEY: z.string(),
   ALCHEMY_WEBHOOK_SIGNING_KEY: z.string(),
+  ALCHEMY_GAS_POLICY_ID: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

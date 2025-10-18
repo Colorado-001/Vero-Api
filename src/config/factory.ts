@@ -18,6 +18,7 @@ import {
   QrGeneratorService,
   TokenBalanceService,
   WalletSetupService,
+  WalletTransferService,
 } from "../application/services/index.js";
 import { createNotificationService } from "../infrastructure/factories/notification-service.factory.js";
 import { createEmailTemplateParserService } from "../infrastructure/factories/email-template-parser.factory.js";
@@ -30,6 +31,7 @@ export type CoreDependencies = {
   walletSetupService: WalletSetupService;
   jwtService: JwtService;
   portfolioService: PortfolioValueService;
+  walletTransferService: WalletTransferService;
   qrGenService: QrGeneratorService;
   close: () => Promise<void>;
 };
@@ -55,6 +57,8 @@ export async function getCoreDependencies(
     config.ENCRYPTION_KEY
   );
 
+  const balanceService = new TokenBalanceService(publicClient);
+
   instance = {
     persistenceSessionManager,
     emailTemplateParser: createEmailTemplateParserService(config),
@@ -62,10 +66,15 @@ export async function getCoreDependencies(
     walletSetupService: walletService,
     jwtService: new JwtService(config.JWT_SECRET),
     portfolioService: new PortfolioValueService(
-      new TokenBalanceService(publicClient),
+      balanceService,
       config.COINGECKO_API_KEY
     ),
     qrGenService: new QrGeneratorService(config),
+    walletTransferService: new WalletTransferService(
+      config,
+      publicClient,
+      balanceService
+    ),
 
     close: async () => {
       try {

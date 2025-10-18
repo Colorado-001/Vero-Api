@@ -31,10 +31,16 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@aa-sdk/core": "^4.73.0",
+    "@account-abstraction/sdk": "^0.6.0",
+    "@account-kit/infra": "^4.73.0",
+    "@account-kit/signer": "^4.73.0",
+    "@account-kit/wallet-client": "^4.73.0",
     "@metamask/delegation-toolkit": "^0.13.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "ethers": "^6.15.0",
     "express": "^5.1.0",
     "http-status": "^2.1.0",
     "jsonwebtoken": "^9.0.2",

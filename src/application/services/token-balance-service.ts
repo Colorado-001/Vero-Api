@@ -78,4 +78,21 @@ export class TokenBalanceService {
       };
     }
   }
+
+  async getTokenBalance(
+    address: Address,
+    tokenAddress: Address,
+    decimals: number
+  ) {
+    const rawBalance = await this.publicClient.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [address],
+    });
+
+    const formatted = formatUnits(rawBalance, decimals);
+
+    return { formatted, rawBalance };
+  }
 }

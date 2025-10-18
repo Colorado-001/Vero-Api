@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
+import winston from "winston";
+
 import { validateJsonPayload } from "../../../utils/helpers";
 import { alchemyWebhookEventSchema } from "../schemas";
 import createLogger from "../../../logging/logger.config";
-import winston from "winston";
 import { Env } from "../../../config/env";
 
 export class WebhookController {
@@ -12,7 +13,7 @@ export class WebhookController {
     this.logger = createLogger("WebhookController", config);
   }
 
-  async processAlchemyWebhook(req: Request, res: Response) {
+  processAlchemyWebhook = async (req: Request, res: Response) => {
     const webhookEvent = validateJsonPayload(
       req.body,
       alchemyWebhookEventSchema
@@ -21,5 +22,5 @@ export class WebhookController {
     this.logger.info("Received Webhook Event:", webhookEvent);
 
     res.json({});
-  }
+  };
 }

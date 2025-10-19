@@ -37,3 +37,10 @@ export function serializeUserOp(userOp: any) {
     )
   );
 }
+
+export function uuidToBigInt(uuid: string): bigint {
+  // Remove dashes
+  const hex = uuid.replace(/-/g, "");
+  // Convert hex string to bigint
+  return BigInt("0x" + hex);
+}

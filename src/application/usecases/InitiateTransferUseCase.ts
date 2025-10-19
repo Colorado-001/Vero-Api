@@ -80,7 +80,6 @@ export class InitiateTransferUseCase {
       walletData: {
         address: user.smartAccountAddress,
         privateKey: user.privateKey,
-        implementation: user.implementation,
       },
       decimals,
       tokenAddress: tokenAddress || undefined,
@@ -96,7 +95,6 @@ export class InitiateTransferUseCase {
           walletData: {
             address: user.smartAccountAddress,
             privateKey: user.privateKey,
-            implementation: user.implementation,
           },
         });
 

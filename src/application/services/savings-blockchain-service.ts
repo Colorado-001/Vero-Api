@@ -9,6 +9,7 @@ import {
   SAVINGS_CONTRACT_ADDRESS,
   SAVINGS_VAULT_ABI,
 } from "../../utils/constants";
+import { uuidToBigInt } from "../../utils/helpers";
 
 export class SavingsBlockchainService {
   private readonly logger: winston.Logger;
@@ -31,7 +32,7 @@ export class SavingsBlockchainService {
       {
         to: SAVINGS_CONTRACT_ADDRESS,
         value: BigInt(0),
-        data: this.encodeSetSavingsGoalData(formattedAmount),
+        data: this.encodeSetSavingsGoalData(formattedAmount, goalId),
         from: userAddress,
       },
       userPrivateKey
@@ -41,11 +42,11 @@ export class SavingsBlockchainService {
     );
   }
 
-  encodeSetSavingsGoalData(goalAmount: string): `0x${string}` {
+  encodeSetSavingsGoalData(goalAmount: string, id: string): `0x${string}` {
     return encodeFunctionData({
       abi: SAVINGS_VAULT_ABI,
       functionName: "setSavingsGoal",
-      args: [BigInt(goalAmount)],
+      args: [BigInt(goalAmount), uuidToBigInt(id)],
     });
   }
 

@@ -104,7 +104,7 @@ export class CreateSavingUseCase {
 
     await this.savingsBlockchainService.setSavingsGoal(
       saving.amountToSave,
-      saving.id,
+      saving.id.split("_")[1],
       user.smartAccountAddress,
       privKey as Hash
     );

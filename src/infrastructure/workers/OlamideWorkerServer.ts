@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { IWorker } from "../../domain/ports";
 import { WebhookConfig } from "../../types/worker";
 import { Env } from "../../config/env";
@@ -6,7 +6,7 @@ import winston from "winston";
 import createLogger from "../../logging/logger.config";
 
 export class OlamideWorkerServer implements IWorker {
-  private readonly axios: axios.AxiosInstance;
+  private readonly axios: AxiosInstance;
   private readonly logger: winston.Logger;
 
   constructor(baseURL: string, config: Env) {

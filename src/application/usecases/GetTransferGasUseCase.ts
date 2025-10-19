@@ -41,7 +41,6 @@ export class GetTransferGasUseCase {
       walletData: {
         address: user.smartAccountAddress,
         privateKey: user.privateKey,
-        implementation: user.implementation,
       },
       decimals,
       tokenAddress: tokenAddress || undefined,

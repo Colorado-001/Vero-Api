@@ -59,5 +59,9 @@ export async function createHTTPServer(config: Env) {
   app.use(errorConverter);
   app.use(errorHandler);
 
-  return { app, close: coreDeps.close };
+  return {
+    app,
+    close: coreDeps.close,
+    transferDetector: coreDeps.transferMonitor,
+  };
 }

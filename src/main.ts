@@ -2,17 +2,10 @@ import "reflect-metadata";
 import { validateEnv } from "./config/env.js";
 import { createHTTPServer } from "./interfaces/http/server.js";
 
-const MEM_LOG_INTERVAL = 1000 * 60 * 5;
+const MEM_LOG_INTERVAL = 1000 * 30;
 
 (async () => {
-  const interval = setInterval(() => {
-    const mem = process.memoryUsage();
-    console.log(
-      `[${new Date().toISOString()}] Heap Used:`,
-      (mem.heapUsed / 1024 / 1024).toFixed(2),
-      "MB"
-    );
-  }, MEM_LOG_INTERVAL);
+  let interval: NodeJS.Timeout;
 
   try {
     const config = validateEnv(process.env);
@@ -22,9 +15,22 @@ const MEM_LOG_INTERVAL = 1000 * 60 * 5;
       console.log(`Server running at ${config.HOST}:${config.PORT}`);
     });
 
+    interval = setInterval(() => {
+      const mem = process.memoryUsage();
+      const mbUsed = (mem.heapUsed / 1024 / 1024).toFixed(2);
+      console.log(`[${new Date().toISOString()}] Heap Used:`, mbUsed, "MB");
+
+      // if (Number(mbUsed) > 100) {
+      //   console.log("stop");
+      //   transferDetector.stop();
+      // }
+    }, MEM_LOG_INTERVAL);
+
     const gracefulShutdown = async (signal: string) => {
       console.log(`${signal} received: shutting down gracefully...`);
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
       try {
         await Promise.race([
           Promise.all([server.closeAllConnections(), close()]),

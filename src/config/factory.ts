@@ -14,6 +14,7 @@ import {
 import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
 import {
   JwtService,
+  MonadTransferDetector,
   PortfolioValueService,
   QrGeneratorService,
   TokenBalanceService,
@@ -23,6 +24,7 @@ import {
 import { createNotificationService } from "../infrastructure/factories/notification-service.factory.js";
 import { createEmailTemplateParserService } from "../infrastructure/factories/email-template-parser.factory.js";
 import { cleanupLoggers } from "../logging/logger.config.js";
+import { UserOrmEntity } from "../infrastructure/typeorm/entities/UserOrm.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -33,6 +35,7 @@ export type CoreDependencies = {
   portfolioService: PortfolioValueService;
   walletTransferService: WalletTransferService;
   qrGenService: QrGeneratorService;
+  transferMonitor: MonadTransferDetector;
   close: () => Promise<void>;
 };
 
@@ -59,6 +62,24 @@ export async function getCoreDependencies(
 
   const balanceService = new TokenBalanceService(publicClient);
 
+  const userRepo = dataSource.getRepository(UserOrmEntity);
+
+  const users = await userRepo.find({
+    select: { smartAccountAddress: true },
+  });
+
+  const addresses = users.map((a) => a.smartAccountAddress);
+
+  console.log(`Found ${addresses.length} addresses`);
+
+  const transferDetector = new MonadTransferDetector(
+    publicClient,
+    config,
+    addresses
+  );
+
+  // await transferDetector.start();
+
   instance = {
     persistenceSessionManager,
     emailTemplateParser: createEmailTemplateParserService(config),
@@ -75,9 +96,11 @@ export async function getCoreDependencies(
       publicClient,
       balanceService
     ),
+    transferMonitor: transferDetector,
 
     close: async () => {
       try {
+        transferDetector.stop();
         await closeDataSource(dataSource);
         cleanupLoggers();
       } catch (e) {

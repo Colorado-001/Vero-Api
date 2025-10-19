@@ -69,7 +69,7 @@ const createLogger = (label: string, config: Env) => {
           winston.format.printf(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             (info: TransformableInfo) => {
-              const baseLog = `${info.timestamp} ${info.level}: ${info.message}`;
+              const baseLog = `${info.timestamp} ${info.label} ---> ${info.level}: ${info.message}`;
               if (info.data && typeof info.data === "object") {
                 return `${baseLog} | Data: ${util.inspect(info.data, {
                   depth: null,

@@ -33,7 +33,6 @@ export class PortfolioValueService {
     if (prices["monad"] === 0 && Boolean(prices["weth"])) {
       prices["monad"] = prices["weth"];
     }
-    console.log("[prices]", prices, native, tokens);
 
     // 3. Map balances to USD values
     const assets: AssetValueDto[] = [

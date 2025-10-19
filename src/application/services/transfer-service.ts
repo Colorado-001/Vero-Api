@@ -31,16 +31,11 @@ import { BadRequestError } from "../../utils/errors";
 import {
   Implementation,
   toMetaMaskSmartAccount,
-  ToMetaMaskSmartAccountReturnType,
 } from "@metamask/delegation-toolkit";
 import {
   createBundlerClient,
   createPaymasterClient,
 } from "viem/account-abstraction";
-import { serializeUserOp } from "../../utils/helpers";
-
-const ALCHEMY_ENTRYPOINT_V07 = "0x0000000071727De22E5E9d8BAf0edAc6f37da032"; // EntryPoint v0.7
-const ALCHEMY_ENTRYPOINT_V06 = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"; // EntryPoint v0.6
 
 export interface SponsoredTransferConfig {
   gasPolicy?: {
@@ -136,11 +131,7 @@ export class WalletTransferService {
     }
   }
 
-  async sponsorNativeTransfer(
-    transferParams: TransferParams
-  ): Promise<{ txHash: string; userOpHash: string }> {
-    await this.confirmBalance(transferParams);
-
+  private async getSmartAccount(transferParams: TransferParams) {
     const userPrivateKey = decryptValue(
       this.config.ENCRYPTION_KEY,
       transferParams.walletData.privateKey
@@ -159,172 +150,105 @@ export class WalletTransferService {
       signer: { account: eoaAccount },
     });
 
-    let isDeployed = await this.checkOnChainDeployment(smartAccount.address);
-
-    // if (!isDeployed) {
-    //   await this.deployWallet(smartAccount);
-    // }
-
-    // isDeployed = await smartAccount.isDeployed();
-
-    this.logger.debug(
-      `Smart account: ${smartAccount.address.toString()} ${isDeployed}`
+    const isDeployed = await this.checkOnChainDeployment(
+      transferParams.walletData.address
     );
+
+    this.logger.info(`Is deployed: ${isDeployed}`);
+
+    if (!isDeployed) {
+      throw new BadRequestError(`Your wallet is yet to be deployed`);
+    }
+
+    return smartAccount;
+  }
+
+  async sponsorNativeTransfer(
+    transferParams: TransferParams
+  ): Promise<{ txHash: string; userOpHash: string }> {
+    await this.confirmBalance(transferParams);
+
+    const smartAccount = await this.getSmartAccount(transferParams);
+
+    this.logger.debug(`Smart account: ${smartAccount.address.toString()}`);
+
+    const bundlerClient = createBundlerClient({
+      transport: http(this.config.RPC_URL),
+      client: this.publicClient,
+    });
 
     const paymasterClient = createPaymasterClient({
       transport: http(this.config.RPC_URL),
     });
 
-    const bundlerClient = createBundlerClient({
-      transport: http(this.config.RPC_URL),
-      // paymaster: paymasterClient,
-      chain,
-    });
+    const gasPrices = await this.getPimlicoGasPrices();
 
-    // Create bundler client with Alchemy's paymaster
-    // const bundlerClient = createBundlerClient({
-    //   account: smartAccount,
-    //   client: this.publicClient,
-    //   transport: http(this.config.RPC_URL),
-    //   paymaster: {
-    //     // This function gets paymaster data from Alchemy
-    //     getPaymasterData: async (userOperation) => {
-    //       this.logger.debug("Requesting paymaster sponsorship");
+    const { maxFeePerGas, maxPriorityFeePerGas } = gasPrices;
 
-    //       if (!userOperation.sender || !userOperation.callData) {
-    //         this.logger.error(
-    //           "Invalid userOperation structure:",
-    //           userOperation
-    //         );
-    //         throw new Error("UserOperation missing required fields");
-    //       }
+    const calls = [
+      {
+        to: transferParams.to as BlockchainAddress,
+        value: parseEther(transferParams.amount),
+        data: "0x" as BlockchainAddress,
+      },
+    ];
 
-    //       const serializedUserOp = {
-    //         sender: userOperation.sender,
-    //         nonce: toHex(userOperation.nonce),
-    //         callData: userOperation.callData,
-    //         // callGasLimit: toHex(userOperation.callGasLimit || BigInt(100000)),
-    //         // verificationGasLimit: toHex(
-    //         //   userOperation.verificationGasLimit || BigInt(100000)
-    //         // ),
-    //         // preVerificationGas: toHex(
-    //         //   userOperation.preVerificationGas || BigInt(50000)
-    //         // ),
-    //         // maxFeePerGas: toHex(userOperation.maxFeePerGas || parseGwei("100")),
-    //         // maxPriorityFeePerGas: toHex(
-    //         //   userOperation.maxPriorityFeePerGas || parseGwei("1")
-    //         // ),
-    //       };
-
-    //       this.logger.debug(JSON.stringify(serializedUserOp, null, 2));
-
-    //       // Convert BigInt fields to hex strings
-    //       const dummySignature = `0x${"0".repeat(130)}` as `0x${string}`;
-
-    //       try {
-    //         // Call Alchemy's Gas Manager API
-    //         const response = await fetch(this.config.RPC_URL, {
-    //           method: "POST",
-    //           headers: { "Content-Type": "application/json" },
-    //           body: JSON.stringify({
-    //             jsonrpc: "2.0",
-    //             id: 1,
-    //             method: "alchemy_requestGasAndPaymasterAndData",
-    //             params: [
-    //               {
-    //                 policyId: this.config.ALCHEMY_GAS_POLICY_ID,
-    //                 entryPoint: smartAccount.entryPoint.address,
-    //                 dummySignature,
-    //                 userOperation: serializedUserOp,
-    //               },
-    //             ],
-    //           }),
-    //         });
-
-    //         const result = await response.json();
-
-    //         if (result.error) {
-    //           this.logger.error("Paymaster error:", result.error);
-    //           throw new Error(`Paymaster error: ${result.error.message}`);
-    //         }
-
-    //         this.logger.debug("Paymaster response received");
-
-    //         // Return the paymaster data
-    //         return result.result;
-    //         // return {
-    //         //   paymaster: result.result.paymaster,
-    //         //   paymasterData: result.result.paymasterData,
-    //         //   paymasterVerificationGasLimit: BigInt(
-    //         //     result.result.paymasterVerificationGasLimit || 0
-    //         //   ),
-    //         //   paymasterPostOpGasLimit: BigInt(
-    //         //     result.result.paymasterPostOpGasLimit || 0
-    //         //   ),
-    //         //   callGasLimit: BigInt(result.result.callGasLimit),
-    //         //   verificationGasLimit: BigInt(result.result.verificationGasLimit),
-    //         //   preVerificationGas: BigInt(result.result.preVerificationGas),
-    //         //   maxFeePerGas: BigInt(
-    //         //     result.result.maxFeePerGas || userOperation.maxFeePerGas
-    //         //   ),
-    //         //   maxPriorityFeePerGas: BigInt(
-    //         //     result.result.maxPriorityFeePerGas ||
-    //         //       userOperation.maxPriorityFeePerGas
-    //         //   ),
-    //         // };
-    //       } catch (error) {
-    //         this.logger.error("Failed to get paymaster data:", error);
-    //         throw error;
-    //       }
-    //     },
-    //   },
-    // });
-
-    // const { maxFeePerGas, maxPriorityFeePerGas } =
-    //   await this.estimateSponsoredGas(transferParams);
-
-    // Send the UserOperation with gas sponsorship
-    const hash = await bundlerClient.sendUserOperation({
+    const userOpHash = await bundlerClient.sendUserOperation({
       account: smartAccount,
-      calls: [
-        {
-          to: transferParams.to as `0x${string}`,
-          value: parseEther(transferParams.amount),
-          data: "0x",
-        },
-      ],
-      maxFeePerGas: BigInt(152500000000),
-      maxPriorityFeePerGas: BigInt(2500000000),
+      calls,
+      paymaster: paymasterClient,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
     });
 
-    this.logger.info("UserOperation sent with sponsored gas:", hash);
+    this.logger.info("UserOperation sent with sponsored gas:", userOpHash);
 
     // Wait for the transaction to be mined
     const receipt = await bundlerClient.waitForUserOperationReceipt({
-      hash,
+      hash: userOpHash,
     });
+
+    this.logger.info(`✅ Transaction Hash: ${receipt.receipt.transactionHash}`);
+    this.logger.info(`💰 Gas paid by paymaster: ${receipt.receipt.from}`);
 
     return {
       txHash: receipt.receipt.transactionHash,
-      userOpHash: hash,
+      userOpHash,
+    };
+  }
+
+  private calculateGasCost(gasLimits: any, gasPrices: any) {
+    const totalGasLimit =
+      gasLimits.callGasLimit +
+      gasLimits.verificationGasLimit +
+      gasLimits.preVerificationGas;
+
+    const maxCost = totalGasLimit * gasPrices.maxFeePerGas;
+    const likelyCost = totalGasLimit * gasPrices.maxPriorityFeePerGas;
+
+    return {
+      totalGasLimit,
+      maxCostWei: maxCost,
+      maxCostEth: formatEther(BigInt(maxCost)),
+      likelyCostWei: likelyCost,
+      likelyCostEth: formatEther(BigInt(likelyCost)),
     };
   }
 
   async estimateSponsoredGas(transferParams: TransferParams) {
+    const smartAccount = await this.getSmartAccount(transferParams);
+
+    const gasPrices = await this.getPimlicoGasPrices();
+
     const isNative = !transferParams.tokenAddress;
-
-    const isDeployed = await this.checkOnChainDeployment(
-      transferParams.walletData.address
-    );
-
-    this.logger.info(`is deployed: ${isDeployed}`);
 
     // Prepare the call
     const transaction = isNative
       ? {
-          account: transferParams.walletData.address as `0x${string}`,
+          // account: transferParams.walletData.address as `0x${string}`,
           to: transferParams.to as `0x${string}`,
           value: parseEther(transferParams.amount),
+          data: "0x",
         }
       : {
           account: transferParams.walletData.address as `0x${string}`,
@@ -336,54 +260,37 @@ export class WalletTransferService {
           ) as `0x${string}`,
         };
 
-    // Get gas estimate from Alchemy RPC
-    const [gasEstimate, block, gasPrice, feeHistory] = await Promise.all([
-      this.publicClient.estimateGas(transaction),
-      this.publicClient.getBlock({ blockTag: "latest" }),
-      this.publicClient.getGasPrice(),
-      // Get fee history for better EIP-1559 estimation
-      this.publicClient.request({
-        method: "eth_feeHistory",
-        params: [
-          "0x4", // Last 4 blocks
-          "latest",
-          [25, 50, 75], // Percentiles for priority fees
-        ],
-      }),
-    ]);
+    // Create bundler client for submitting user operations
+    const bundlerClient = createBundlerClient({
+      transport: http(this.config.RPC_URL),
+      client: this.publicClient,
+    });
 
-    // Calculate EIP-1559 fees using fee history
-    const baseFeePerGas = block.baseFeePerGas || gasPrice;
+    // Create paymaster client for gas sponsorship
+    const paymasterClient = createPaymasterClient({
+      transport: http(this.config.RPC_URL),
+    });
 
-    // Get median priority fee from recent blocks
-    const recentPriorityFees =
-      feeHistory.reward?.map(
-        (fees: any[]) => BigInt(fees[1]) // Use 50th percentile
-      ) || [];
+    const userOp = await bundlerClient.prepareUserOperation({
+      account: smartAccount,
+      calls: [transaction],
+      paymaster: paymasterClient,
+    });
 
-    const medianPriorityFee =
-      recentPriorityFees.length > 0
-        ? recentPriorityFees.reduce(
-            (a: bigint, b: bigint) => a + b,
-            BigInt(0)
-          ) / BigInt(recentPriorityFees.length)
-        : gasPrice / BigInt(10);
+    const gasLimits = {
+      callGasLimit: userOp.callGasLimit,
+      verificationGasLimit: userOp.verificationGasLimit,
+      preVerificationGas: userOp.preVerificationGas,
+    };
 
-    // Add 10% buffer to base fee for price volatility
-    const maxFeePerGas =
-      (baseFeePerGas * BigInt(110)) / BigInt(100) + medianPriorityFee;
-    const maxPriorityFeePerGas = medianPriorityFee;
+    const gasEstimate = this.calculateGasCost(gasLimits, gasPrices);
 
-    const estimatedCostInWei = gasEstimate * maxFeePerGas;
-    const estimatedCostInMON = formatEther(estimatedCostInWei);
+    const estimatedCostInMON = gasEstimate.likelyCostEth;
 
     this.logger.info("Calculated Gas Estimate", {
-      gasLimit: gasEstimate.toString(),
-      baseFeePerGas: baseFeePerGas.toString(),
-      maxFeePerGas: maxFeePerGas.toString(),
-      maxPriorityFeePerGas: maxPriorityFeePerGas.toString(),
-      estimatedCostInMON,
-      feeHistoryBlocks: feeHistory.reward?.length || 0,
+      ...gasPrices,
+      ...gasLimits,
+      ...gasEstimate,
     });
 
     // Calculate cost in USD
@@ -395,8 +302,44 @@ export class WalletTransferService {
     return {
       estimatedCostMON: estimatedCostInMON,
       estimatedCostUSD,
-      maxFeePerGas: maxFeePerGas.toString(),
-      maxPriorityFeePerGas: maxPriorityFeePerGas.toString(),
+      maxFeePerGas: gasPrices.maxFeePerGas.toString(),
+      maxPriorityFeePerGas: gasPrices.maxPriorityFeePerGas.toString(),
+    };
+  }
+
+  private async getPimlicoGasPrices() {
+    try {
+      const response = await fetch(this.config.RPC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "pimlico_getUserOperationGasPrice",
+          params: [],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.result) {
+        return {
+          maxFeePerGas: BigInt(data.result.standard.maxFeePerGas),
+          maxPriorityFeePerGas: BigInt(
+            data.result.standard.maxPriorityFeePerGas
+          ),
+        };
+      }
+    } catch (error) {
+      console.log("Pimlico gas price endpoint not available, using defaults");
+    }
+
+    // Fallback to Monad defaults
+    return {
+      maxFeePerGas: parseGwei("3"),
+      maxPriorityFeePerGas: parseGwei("2.5"),
     };
   }
 

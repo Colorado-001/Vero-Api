@@ -2,18 +2,17 @@ import {
   parseEther,
   encodeFunctionData,
   parseUnits,
-  createWalletClient,
   http,
   PublicClient,
   formatEther,
   toHex,
   parseAbi,
   parseGwei,
+  Hash,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { alchemy, AlchemyTransport, monadTestnet } from "@account-kit/infra";
+import { alchemy, AlchemyTransport } from "@account-kit/infra";
 import { LocalAccountSigner } from "@aa-sdk/core";
-import { monadTestnet as chain } from "viem/chains";
 
 import { WalletClientSigner } from "@aa-sdk/core";
 import { createSmartWalletClient } from "@account-kit/wallet-client";
@@ -48,19 +47,18 @@ export interface SponsoredTransferConfig {
 
 interface TransferParams {
   to: string;
-  amount: string; // user-readable
+  amount: string | bigint; // user-readable
+  data?: Hash;
   tokenAddress?: BlockchainAddress; // optional for ERC20
   decimals?: number; // ERC20 decimals, default 18
   walletData: {
     privateKey: string;
-    implementation: SmartAccountImplementation;
     address: BlockchainAddress;
   };
 }
 
 export class WalletTransferService {
   private readonly logger: winston.Logger;
-  private readonly alchemy: AlchemyTransport;
 
   constructor(
     private readonly config: Env,
@@ -70,7 +68,6 @@ export class WalletTransferService {
     private readonly balanceService: TokenBalanceService
   ) {
     this.logger = createLogger("WalletTransferService", config);
-    this.alchemy = alchemy({ apiKey: this.config.ALCHEMY_API_KEY });
   }
 
   private async deployWallet(
@@ -164,9 +161,9 @@ export class WalletTransferService {
     return smartAccount;
   }
 
-  async sponsorNativeTransfer(
+  async sponsorTransaction(
     transferParams: TransferParams
-  ): Promise<{ txHash: string; userOpHash: string }> {
+  ): Promise<{ txHash: Hash; userOpHash: string }> {
     await this.confirmBalance(transferParams);
 
     const smartAccount = await this.getSmartAccount(transferParams);
@@ -189,8 +186,11 @@ export class WalletTransferService {
     const calls = [
       {
         to: transferParams.to as BlockchainAddress,
-        value: parseEther(transferParams.amount),
-        data: "0x" as BlockchainAddress,
+        value:
+          typeof transferParams.amount === "string"
+            ? parseEther(transferParams.amount)
+            : transferParams.amount,
+        data: transferParams.data || "0x",
       },
     ];
 
@@ -243,23 +243,21 @@ export class WalletTransferService {
 
     const isNative = !transferParams.tokenAddress;
 
+    if (!isNative) {
+      throw new BadRequestError(
+        "Only native transactions are supported at this time"
+      );
+    }
+
     // Prepare the call
-    const transaction = isNative
-      ? {
-          // account: transferParams.walletData.address as `0x${string}`,
-          to: transferParams.to as `0x${string}`,
-          value: parseEther(transferParams.amount),
-          data: "0x",
-        }
-      : {
-          account: transferParams.walletData.address as `0x${string}`,
-          to: transferParams.tokenAddress as `0x${string}`,
-          data: this.encodeERC20Transfer(
-            transferParams.to,
-            transferParams.amount,
-            transferParams.decimals || 18
-          ) as `0x${string}`,
-        };
+    const transaction = {
+      to: transferParams.to as `0x${string}`,
+      value:
+        typeof transferParams.amount === "string"
+          ? parseEther(transferParams.amount)
+          : transferParams.amount,
+      data: "0x",
+    };
 
     // Create bundler client for submitting user operations
     const bundlerClient = createBundlerClient({

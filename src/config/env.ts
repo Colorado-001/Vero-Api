@@ -43,6 +43,10 @@ const envSchema = z.object({
   ALCHEMY_API_KEY: z.string(),
   ALCHEMY_WEBHOOK_SIGNING_KEY: z.string(),
   ALCHEMY_GAS_POLICY_ID: z.string(),
+
+  WORKER_API_KEY: z.string(),
+  APP_URL: z.url(),
+  WORKER_URL: z.url(),
 });
 
 export type Env = z.infer<typeof envSchema>;

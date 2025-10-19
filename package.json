@@ -37,6 +37,7 @@
     "@account-kit/signer": "^4.73.0",
     "@account-kit/wallet-client": "^4.73.0",
     "@metamask/delegation-toolkit": "^0.13.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

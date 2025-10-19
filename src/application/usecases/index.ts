@@ -8,3 +8,4 @@ export * from "./CheckUsernameAvailabilityUseCase.js";
 export * from "./SetupPinUseCase.js";
 export * from "./GetPortfolioUseCase.js";
 export * from "./GetTransferGasUseCase.js";
+export * from "./CreateSavingUseCase.js";

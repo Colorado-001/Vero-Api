@@ -90,7 +90,7 @@ export class InitiateTransferUseCase {
 
     if (!tokenAddress) {
       const { txHash, userOpHash } =
-        await this.transferService.sponsorNativeTransfer({
+        await this.transferService.sponsorTransaction({
           amount,
           to,
           walletData: {

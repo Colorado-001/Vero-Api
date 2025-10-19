@@ -25,6 +25,10 @@ import { createNotificationService } from "../infrastructure/factories/notificat
 import { createEmailTemplateParserService } from "../infrastructure/factories/email-template-parser.factory.js";
 import { cleanupLoggers } from "../logging/logger.config.js";
 import { UserOrmEntity } from "../infrastructure/typeorm/entities/UserOrm.js";
+import {
+  createBundlerClient,
+  createPaymasterClient,
+} from "viem/account-abstraction";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -53,6 +57,15 @@ export async function getCoreDependencies(
   const publicClient = createPublicClient({
     chain,
     transport: http(),
+  });
+
+  const bundlerClient = createBundlerClient({
+    transport: http(config.RPC_URL),
+    client: publicClient,
+  });
+
+  const paymasterClient = createPaymasterClient({
+    transport: http(config.RPC_URL),
   });
 
   const walletService = new WalletSetupService(
@@ -94,6 +107,8 @@ export async function getCoreDependencies(
     walletTransferService: new WalletTransferService(
       config,
       publicClient,
+      bundlerClient,
+      paymasterClient,
       balanceService
     ),
     transferMonitor: transferDetector,

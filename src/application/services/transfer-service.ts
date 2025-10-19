@@ -31,8 +31,10 @@ import { BadRequestError } from "../../utils/errors";
 import {
   Implementation,
   toMetaMaskSmartAccount,
+  ToMetaMaskSmartAccountReturnType,
 } from "@metamask/delegation-toolkit";
 import {
+  BundlerClient,
   createBundlerClient,
   createPaymasterClient,
 } from "viem/account-abstraction";
@@ -63,56 +65,57 @@ export class WalletTransferService {
   constructor(
     private readonly config: Env,
     private readonly publicClient: PublicClient,
+    private readonly bundlerClient: BundlerClient,
+    private readonly paymasterClient: ReturnType<typeof createPaymasterClient>,
     private readonly balanceService: TokenBalanceService
   ) {
     this.logger = createLogger("WalletTransferService", config);
     this.alchemy = alchemy({ apiKey: this.config.ALCHEMY_API_KEY });
   }
 
-  // async deployWallet(
-  //   smartAccount: ToMetaMaskSmartAccountReturnType<Implementation.Hybrid>
-  // ) {
-  //   this.logger.info("Deploying account...");
+  private async deployWallet(
+    account: ToMetaMaskSmartAccountReturnType<Implementation.Hybrid>
+  ) {
+    this.logger.info(`Deploy wallet: ${account.address}`);
 
-  //   const { factory, factoryData } = await smartAccount.getFactoryArgs();
+    const { maxFeePerGas, maxPriorityFeePerGas } =
+      await this.getPimlicoGasPrices();
 
-  //   const txHash = await this.publicClient.sendTransaction({
-  //     account: owner,
-  //     to: factoryAddress,
-  //     data: initCode,
-  //     value: 0n,
-  //   });
+    this.logger.info({
+      message: "💰 Gas fees will be sponsored by paymaster",
+      data: { maxFeePerGas, maxPriorityFeePerGas },
+    });
 
-  //   const bundlerClientDeploy = createBundlerClient({
-  //     client: this.publicClient,
-  //     transport: http(this.config.RPC_URL),
-  //   });
+    const userOpHash = await this.bundlerClient.sendUserOperation({
+      account,
+      calls: [
+        {
+          to: account.address, // Send to self
+          value: BigInt(0),
+          data: "0x", // Empty data
+        },
+      ],
+      paymaster: this.paymasterClient,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+    });
 
-  //   const factoryBalance = await this.publicClient.getBalance({
-  //     address: smartAccount.address,
-  //   });
+    console.log("User Operation Hash:", userOpHash);
+    console.log("⏳ Waiting for user operation to be mined...");
 
-  //   this.logger.debug(`Factory balance: ${factoryBalance.toString()}`);
+    // Wait for the user operation to be included in a block
+    const receipt = await this.bundlerClient.waitForUserOperationReceipt({
+      hash: userOpHash,
+    });
 
-  //   const deployHash = await bundlerClientDeploy.sendUserOperation({
-  //     account: smartAccount,
-  //     calls: [
-  //       {
-  //         to: smartAccount.address, // Self-call
-  //         value: parseEther("0.1"),
-  //         data: "0x",
-  //       },
-  //     ],
-  //   });
+    this.logger.debug({
+      message: "✅ Transaction Hash",
+      data: receipt.receipt,
+    });
 
-  //   this.logger.debug("Deployment UserOp sent:", deployHash.toString());
-
-  //   await bundlerClientDeploy.waitForUserOperationReceipt({
-  //     hash: deployHash,
-  //   });
-
-  //   this.logger.info("Account deployed successfully");
-  // }
+    this.logger.info("✅ Smart wallet deployed successfully!");
+    this.logger.info(`💰 Gas paid by paymaster: ${receipt.receipt.from}`);
+  }
 
   private async checkOnChainDeployment(address: string): Promise<boolean> {
     try {
@@ -137,8 +140,6 @@ export class WalletTransferService {
       transferParams.walletData.privateKey
     );
 
-    this.logger.debug(`privKey: ${userPrivateKey}`);
-
     const eoaAccount = privateKeyToAccount(userPrivateKey as `0x${string}`);
 
     // Recreate MetaMask smart account
@@ -157,7 +158,7 @@ export class WalletTransferService {
     this.logger.info(`Is deployed: ${isDeployed}`);
 
     if (!isDeployed) {
-      throw new BadRequestError(`Your wallet is yet to be deployed`);
+      await this.deployWallet(smartAccount);
     }
 
     return smartAccount;

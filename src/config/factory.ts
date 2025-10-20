@@ -33,6 +33,7 @@ import {
   createPaymasterClient,
 } from "viem/account-abstraction";
 import { OlamideWorkerServer } from "../infrastructure/workers/OlamideWorkerServer.js";
+import { DelegateRepository } from "../infrastructure/typeorm/repositories/delegate.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -103,7 +104,8 @@ export async function getCoreDependencies(
     publicClient,
     bundlerClient,
     paymasterClient,
-    balanceService
+    balanceService,
+    new DelegateRepository(dataSource.manager)
   );
   const worker = new OlamideWorkerServer(config);
   const savingsBlockchainService = new SavingsBlockchainService(

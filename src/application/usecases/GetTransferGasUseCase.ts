@@ -14,7 +14,8 @@ export class GetTransferGasUseCase {
     userId: string,
     amount: string,
     to: BlockchainAddress,
-    tokenSymbol: string | null = null
+    tokenSymbol: string | null = null,
+    delegation: string | null = null
   ) {
     const user = await this.userRepo.findById(userId);
 
@@ -44,6 +45,7 @@ export class GetTransferGasUseCase {
       },
       decimals,
       tokenAddress: tokenAddress || undefined,
+      delegation: delegation || undefined,
     });
 
     return result;

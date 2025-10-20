@@ -61,6 +61,7 @@ export abstract class DelegationBase {
     this._amountLimit = props.amountLimit;
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
+    this._signedBlockchainDelegation = props.signedBlockchainDelegation;
     this.validate();
   }
 
@@ -152,9 +153,9 @@ export class AllowanceDelegation extends DelegationBase {
     if (!this._walletAddress.startsWith("0x")) {
       throw new Error("Wallet address must start with 0x");
     }
-    if (this._startDate < new Date()) {
-      throw new Error("Start date cannot be in the past");
-    }
+    // if (this._startDate < new Date()) {
+    //   throw new Error("Start date cannot be in the past");
+    // }
   }
 
   // Getters

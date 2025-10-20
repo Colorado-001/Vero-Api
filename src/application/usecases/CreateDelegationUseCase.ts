@@ -35,8 +35,8 @@ export class CreateDelegationUseCase {
       const now = new Date();
       const startDate = request.startDate ? request.startDate : now;
 
-      startDate.setHours(now.getHours());
-      startDate.setMinutes(now.getMinutes() + 3);
+      startDate.setHours(0);
+      startDate.setMinutes(0);
       request.startDate = startDate;
 
       this.logger.info("Creating new delegation", {
@@ -129,9 +129,6 @@ export class CreateDelegationUseCase {
       }
       if (!request.startDate) {
         throw new Error("Start date is required for allowance delegation");
-      }
-      if (request.startDate < new Date()) {
-        throw new Error("Start date cannot be in the past");
       }
     } else if (request.type === DelegationType.GROUP_WALLET) {
       throw new BadRequestError("Group wallet not supported at this time");

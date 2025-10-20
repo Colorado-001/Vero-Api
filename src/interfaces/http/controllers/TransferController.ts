@@ -46,7 +46,8 @@ export class TransferController {
           req.user.sub,
           payload.amount,
           payload.to as BlockchainAddress,
-          payload.tokenSymbol
+          payload.tokenSymbol,
+          payload.delegation
         );
 
         res.status(httpStatus.OK).json(result);
@@ -73,7 +74,8 @@ export class TransferController {
           req.user.sub,
           payload.to as BlockchainAddress,
           payload.amount,
-          payload.tokenSymbol
+          payload.tokenSymbol,
+          payload.delegation
         );
 
         res.status(httpStatus.OK).json({ success: true });

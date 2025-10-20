@@ -7,13 +7,12 @@ import {
   formatEther,
   parseGwei,
   Hash,
+  decodeFunctionData,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { alchemy, AlchemyTransport } from "@account-kit/infra";
-import { LocalAccountSigner } from "@aa-sdk/core";
-
-import { WalletClientSigner } from "@aa-sdk/core";
-import { createSmartWalletClient } from "@account-kit/wallet-client";
+import { createExecution, ExecutionMode } from "@metamask/delegation-toolkit";
+import { DelegationManager } from "@metamask/delegation-toolkit/contracts";
+import { zeroAddress } from "viem";
 
 import {
   BlockchainAddress,
@@ -24,7 +23,7 @@ import { TokenBalanceService } from "./token-balance-service";
 import winston from "winston";
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
-import { BadRequestError } from "../../utils/errors";
+import { BadRequestError, NotFoundError } from "../../utils/errors";
 import {
   Implementation,
   toMetaMaskSmartAccount,
@@ -35,6 +34,7 @@ import {
   createBundlerClient,
   createPaymasterClient,
 } from "viem/account-abstraction";
+import { IDelegationRepository } from "../../domain/repositories";
 
 export interface SponsoredTransferConfig {
   gasPolicy?: {
@@ -47,6 +47,7 @@ interface TransferParams {
   to: string;
   amount: string | bigint; // user-readable
   data?: Hash;
+  delegation?: string;
   tokenAddress?: BlockchainAddress; // optional for ERC20
   decimals?: number; // ERC20 decimals, default 18
   walletData: {
@@ -63,7 +64,8 @@ export class WalletTransferService {
     private readonly publicClient: PublicClient,
     private readonly bundlerClient: BundlerClient,
     private readonly paymasterClient: ReturnType<typeof createPaymasterClient>,
-    private readonly balanceService: TokenBalanceService
+    private readonly balanceService: TokenBalanceService,
+    private readonly delegationRepo: IDelegationRepository
   ) {
     this.logger = createLogger("WalletTransferService", config);
   }
@@ -160,7 +162,10 @@ export class WalletTransferService {
   async sponsorTransaction(
     transferParams: TransferParams
   ): Promise<{ txHash: Hash; userOpHash: string }> {
-    await this.confirmBalance(transferParams);
+    const signedDelegation = await this.getSignedDelegation(transferParams);
+
+    // TODO: Check delegation balance
+    if (!signedDelegation) await this.confirmBalance(transferParams);
 
     const smartAccount = await this.getSmartAccount(
       transferParams.walletData.privateKey,
@@ -193,13 +198,48 @@ export class WalletTransferService {
       },
     ];
 
-    const userOpHash = await bundlerClient.sendUserOperation({
-      account: smartAccount,
-      calls,
-      paymaster: paymasterClient,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-    });
+    let userOpHash;
+
+    if (signedDelegation) {
+      const delegations = [[signedDelegation]];
+
+      const transaction = calls[0];
+
+      const executions = createExecution({
+        target: transaction.to,
+        callData: transaction.data,
+        value: transaction.value,
+      });
+
+      const redeemDelegationCalldata =
+        DelegationManager.encode.redeemDelegations({
+          delegations,
+          modes: [ExecutionMode.SingleDefault],
+          executions: [[executions]],
+        });
+
+      userOpHash = await bundlerClient.sendUserOperation({
+        account: smartAccount,
+        calls: [
+          {
+            to: smartAccount.address,
+            data: redeemDelegationCalldata,
+            value: BigInt(0),
+          },
+        ],
+        paymaster: paymasterClient,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+      });
+    } else {
+      userOpHash = await bundlerClient.sendUserOperation({
+        account: smartAccount,
+        calls,
+        paymaster: paymasterClient,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+      });
+    }
 
     this.logger.info("UserOperation sent with sponsored gas:", userOpHash);
 
@@ -217,25 +257,9 @@ export class WalletTransferService {
     };
   }
 
-  private calculateGasCost(gasLimits: any, gasPrices: any) {
-    const totalGasLimit =
-      gasLimits.callGasLimit +
-      gasLimits.verificationGasLimit +
-      gasLimits.preVerificationGas;
-
-    const maxCost = totalGasLimit * gasPrices.maxFeePerGas;
-    const likelyCost = totalGasLimit * gasPrices.maxPriorityFeePerGas;
-
-    return {
-      totalGasLimit,
-      maxCostWei: maxCost,
-      maxCostEth: formatEther(BigInt(maxCost)),
-      likelyCostWei: likelyCost,
-      likelyCostEth: formatEther(BigInt(likelyCost)),
-    };
-  }
-
   async estimateSponsoredGas(transferParams: TransferParams) {
+    const signedDelegation = await this.getSignedDelegation(transferParams);
+
     const smartAccount = await this.getSmartAccount(
       transferParams.walletData.privateKey,
       transferParams.walletData.address
@@ -272,11 +296,42 @@ export class WalletTransferService {
       transport: http(this.config.RPC_URL),
     });
 
-    const userOp = await bundlerClient.prepareUserOperation({
-      account: smartAccount,
-      calls: [transaction],
-      paymaster: paymasterClient,
-    });
+    let userOp;
+
+    if (signedDelegation) {
+      const delegations = [[signedDelegation]];
+
+      const executions = createExecution({
+        target: transaction.to,
+        callData: transaction.data,
+        value: transaction.value,
+      });
+
+      const redeemDelegationCalldata =
+        DelegationManager.encode.redeemDelegations({
+          delegations,
+          modes: [ExecutionMode.SingleDefault],
+          executions: [[executions]],
+        });
+
+      userOp = await bundlerClient.prepareUserOperation({
+        account: smartAccount,
+        calls: [
+          {
+            to: smartAccount.address,
+            data: redeemDelegationCalldata,
+            value: BigInt(0),
+          },
+        ],
+        paymaster: paymasterClient,
+      });
+    } else {
+      userOp = await bundlerClient.prepareUserOperation({
+        account: smartAccount,
+        calls: [transaction],
+        paymaster: paymasterClient,
+      });
+    }
 
     const gasLimits = {
       callGasLimit: userOp.callGasLimit,
@@ -306,6 +361,47 @@ export class WalletTransferService {
       maxFeePerGas: gasPrices.maxFeePerGas.toString(),
       maxPriorityFeePerGas: gasPrices.maxPriorityFeePerGas.toString(),
     };
+  }
+
+  private calculateGasCost(gasLimits: any, gasPrices: any) {
+    const totalGasLimit =
+      gasLimits.callGasLimit +
+      gasLimits.verificationGasLimit +
+      gasLimits.preVerificationGas;
+
+    const maxCost = totalGasLimit * gasPrices.maxFeePerGas;
+    const likelyCost = totalGasLimit * gasPrices.maxPriorityFeePerGas;
+
+    return {
+      totalGasLimit,
+      maxCostWei: maxCost,
+      maxCostEth: formatEther(BigInt(maxCost)),
+      likelyCostWei: likelyCost,
+      likelyCostEth: formatEther(BigInt(likelyCost)),
+    };
+  }
+
+  private async getSignedDelegation(transferParams: TransferParams) {
+    let signedDelegation = null;
+
+    if (transferParams.delegation) {
+      const delegation = await this.delegationRepo.findById(
+        transferParams.delegation
+      );
+
+      this.logger.debug({
+        message: "Fetched delegation",
+        data: delegation,
+      });
+
+      if (!delegation || !delegation.signedBlockchainDelegation) {
+        throw new NotFoundError("Delegation not found");
+      }
+
+      signedDelegation = delegation.signedBlockchainDelegation;
+    }
+
+    return signedDelegation;
   }
 
   private async getPimlicoGasPrices() {
@@ -344,35 +440,8 @@ export class WalletTransferService {
     };
   }
 
-  private encodeERC20Transfer(
-    to: string,
-    amount: string,
-    decimal: number
-  ): `0x${string}` {
-    // ERC20 transfer function ABI
-    const transferAbi = [
-      {
-        name: "transfer",
-        type: "function",
-        stateMutability: "nonpayable",
-        inputs: [
-          { name: "to", type: "address" },
-          { name: "amount", type: "uint256" },
-        ],
-        outputs: [{ name: "", type: "bool" }],
-      },
-    ] as const;
-
-    // Encode the transfer function call
-    return encodeFunctionData({
-      abi: transferAbi,
-      functionName: "transfer",
-      args: [to as `0x${string}`, parseUnits(amount, decimal)],
-    });
-  }
-
   private async confirmBalance(params: TransferParams) {
-    const { to, amount, tokenAddress, decimals = 18, walletData } = params;
+    const { amount, tokenAddress, decimals = 18, walletData } = params;
 
     if (tokenAddress) {
       const balance = await this.balanceService.getTokenBalance(
@@ -414,5 +483,90 @@ export class WalletTransferService {
     );
     const data = await response.json();
     return data.ethereum.usd || 0;
+  }
+
+  private async validateDelegationTiming(signedDelegation: any): Promise<void> {
+    try {
+      // Decode the delegation to check caveats/enforcers
+      const delegation = signedDelegation;
+
+      // Check if there are time-based enforcers
+      if (delegation.caveats && delegation.caveats.length > 0) {
+        for (const caveat of delegation.caveats) {
+          // Look for NativeTokenPeriodTransferEnforcer
+          if (caveat.enforcer) {
+            const enforcerTerms = caveat.terms;
+
+            // Decode enforcer terms to get start/end times
+            // Format: [uint256 allowance, uint256 period, uint128 start, uint128 end]
+            if (enforcerTerms && enforcerTerms.length >= 96) {
+              // Parse start time (bytes 64-95)
+              const startHex = "0x" + enforcerTerms.slice(64, 96);
+              const startTime = BigInt(startHex);
+
+              // Parse end time (bytes 96-127)
+              const endHex = "0x" + enforcerTerms.slice(96, 128);
+              const endTime = BigInt(endHex);
+
+              const currentTime = BigInt(Math.floor(Date.now() / 1000));
+
+              this.logger.debug({
+                message: "Delegation time validation",
+                data: {
+                  startTime: startTime.toString(),
+                  endTime: endTime.toString(),
+                  currentTime: currentTime.toString(),
+                  notStarted: currentTime < startTime,
+                  expired: currentTime > endTime,
+                },
+              });
+
+              if (currentTime < startTime) {
+                const timeUntilStart = Number(startTime - currentTime);
+                throw new BadRequestError(
+                  `Delegation period has not started yet. Starts in ${timeUntilStart} seconds`
+                );
+              }
+
+              if (currentTime > endTime) {
+                throw new BadRequestError("Delegation period has expired");
+              }
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      if (error instanceof BadRequestError) {
+        throw error;
+      }
+
+      this.logger.warn({
+        message: "Could not validate delegation timing",
+        error: error.message,
+      });
+    }
+  }
+
+  private decodeRevertReason(errorData: string): string {
+    try {
+      if (errorData.startsWith("0x08c379a0")) {
+        // Standard Error(string) selector
+        const reasonHex = errorData.slice(10); // Remove selector
+        const decoded = decodeFunctionData({
+          abi: [
+            {
+              name: "Error",
+              type: "function",
+              inputs: [{ name: "reason", type: "string" }],
+            },
+          ],
+          data: `0x${reasonHex}`,
+        });
+        if (decoded.args) return decoded.args[0] as string;
+      }
+      return "Unknown error";
+    } catch {
+      return "Could not decode error";
+    }
   }
 }

@@ -34,13 +34,25 @@ export class DelegationService {
         to.smartAccountAddress
       );
 
+    const start = Math.floor(startDate.getTime() / 1000);
+
+    this.logger.info({
+      message: "Create Delegation",
+      data: {
+        delegator: delegatorSmartAccount.address,
+        delegatee: delegateeSmartAccount.address,
+        start,
+        amount,
+      },
+    });
+
     const delegation = createDelegation({
       to: delegateeSmartAccount.address,
       from: delegatorSmartAccount.address,
       environment: delegatorSmartAccount.environment,
       scope: {
         type: "nativeTokenPeriodTransfer",
-        startDate: startDate.getTime(), // Unix timestamp
+        startDate: start,
         periodAmount: parseEther(amount),
         periodDuration: 86400, // 24 hours in seconds,
       },

@@ -53,7 +53,8 @@ export class InitiateTransferUseCase {
     userId: string,
     to: BlockchainAddress,
     amount: string,
-    tokenSymbol?: string
+    tokenSymbol?: string,
+    delegation?: string
   ) {
     const user = await this.userRepo.findById(userId);
 
@@ -83,6 +84,7 @@ export class InitiateTransferUseCase {
       },
       decimals,
       tokenAddress: tokenAddress || undefined,
+      delegation,
     });
 
     this.logger.debug("Gas", gas);
@@ -92,6 +94,7 @@ export class InitiateTransferUseCase {
         await this.transferService.sponsorTransaction({
           amount,
           to,
+          delegation,
           walletData: {
             address: user.smartAccountAddress,
             privateKey: user.privateKey,

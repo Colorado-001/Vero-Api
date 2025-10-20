@@ -12,6 +12,7 @@ import { EntityManager } from "typeorm";
 import {
   CreateSavingUseCase,
   ExecuteSavingUseCase,
+  ListUserAutoFlowsUseCase,
 } from "../../../application/usecases";
 import {
   SavingExecutionRepository,
@@ -53,6 +54,25 @@ export class SavingsController {
           ...payload,
           userId: req.user.sub,
         });
+
+        res.json(result);
+      }
+    );
+  };
+
+  listUserAutoflow = async (req: AuthRequest, res: Response) => {
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const savingsRepo = new TimeBasedSavingRepository(manager);
+        const userRepo = new UserRepository(manager);
+
+        const useCase = new ListUserAutoFlowsUseCase(
+          savingsRepo,
+          userRepo,
+          this.config
+        );
+
+        const result = await useCase.execute(req.user.sub);
 
         res.json(result);
       }

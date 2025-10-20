@@ -4,7 +4,6 @@ import {
   ITimeBasedSavingRepository,
   IUserRepository,
 } from "../../domain/repositories";
-import { decryptValue } from "../../utils/encryption";
 import { CreateSavingRequest, SavingDto } from "../dto";
 import { SavingsBlockchainService } from "../services";
 import { IWorker } from "../../domain/ports";

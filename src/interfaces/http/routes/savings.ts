@@ -16,6 +16,12 @@ export function createSavingsRouter(coreDeps: CoreDependencies, config: Env) {
     asyncHandler(controller.createAutoflow)
   );
 
+  router.get(
+    "/autoflow",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.listUserAutoflow)
+  );
+
   router.post(
     "/autoflow/trigger",
     verifyWorker(config.WORKER_API_KEY, createLogger("Verify Worker", config)),

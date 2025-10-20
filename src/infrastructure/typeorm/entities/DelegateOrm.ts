@@ -57,6 +57,9 @@ export class DelegationOrm {
   @UpdateDateColumn()
   updatedAt!: Date;
 
+  @Column({ type: "jsonb", nullable: true })
+  signedBlockchainDelegation: any;
+
   // Relationships
   @ManyToOne(() => UserOrmEntity)
   @JoinColumn({ name: "userId" })

@@ -70,10 +70,14 @@ export class ListDelegationsUseCase {
     // 2. Apply filters
     delegations = this.applyFilters(delegations, request);
 
+    console.log(delegations.length);
+
     // 3. Transform to summary format
     const delegationSummaries = delegations.map((delegation) =>
       this.toSummary(delegation)
     );
+
+    console.log(delegationSummaries.length);
 
     this.logger.info("Delegations listed successfully", {
       count: delegationSummaries.length,
@@ -237,8 +241,8 @@ export class ListDelegationsUseCase {
   ): Promise<ListDelegationsResponse> {
     return this.execute({
       walletAddress,
-      type: "allowance", // Only allowances are used for send operations
-      includeInactive: false, // Only active delegations for sending
+      type: "allowance",
+      includeInactive: false,
     });
   }
 
@@ -247,6 +251,7 @@ export class ListDelegationsUseCase {
   ): Promise<ListDelegationsResponse> {
     return this.execute({
       userId,
+      includeInactive: true,
     });
   }
 

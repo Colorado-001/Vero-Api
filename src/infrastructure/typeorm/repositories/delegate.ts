@@ -33,6 +33,7 @@ export class DelegateRepository implements IDelegationRepository {
           startDate: model.startDate!,
           createdAt: model.createdAt,
           updatedAt: model.updatedAt,
+          signedBlockchainDelegation: model.signedBlockchainDelegation,
         },
         false
       );
@@ -47,6 +48,7 @@ export class DelegateRepository implements IDelegationRepository {
         approvalThreshold: model.approvalThreshold!,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
+        signedBlockchainDelegation: model.signedBlockchainDelegation,
       });
     }
   }
@@ -58,6 +60,7 @@ export class DelegateRepository implements IDelegationRepository {
     model.name = delegation.name;
     model.userId = delegation.userId;
     model.amountLimit = delegation.amountLimit;
+    model.signedBlockchainDelegation = delegation.signedBlockchainDelegation;
 
     if (isAllowanceDelegation(delegation)) {
       model.walletAddress = delegation.walletAddress;

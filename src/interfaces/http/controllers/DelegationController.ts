@@ -24,7 +24,7 @@ import {
 } from "../../../infrastructure/typeorm/repositories";
 import { Request, Response } from "express";
 import { createDelegationSchema } from "../schemas";
-import { BadRequestError } from "../../../utils/errors";
+import { BadRequestError, NotFoundError } from "../../../utils/errors";
 import { AllowanceFrequency, DelegationType } from "../../../domain/entities";
 
 export class DelegationController {
@@ -82,6 +82,29 @@ export class DelegationController {
         const useCase = new ListDelegationsUseCase(delegateRepo, this.config);
 
         const result = await useCase.listAllDelegationsByUser(req.user.sub);
+
+        res.json(result.delegations);
+      }
+    );
+  };
+
+  listDelegationForSend = async (req: AuthRequest, res: Response) => {
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const userRepo = new UserRepository(manager);
+        const delegateRepo = new DelegateRepository(manager);
+
+        const user = await userRepo.findById(req.user.sub);
+
+        if (!user) {
+          throw new NotFoundError("User not found");
+        }
+
+        const useCase = new ListDelegationsUseCase(delegateRepo, this.config);
+
+        const result = await useCase.listDelegationsForSendOperation(
+          user.smartAccountAddress
+        );
 
         res.json(result.delegations);
       }

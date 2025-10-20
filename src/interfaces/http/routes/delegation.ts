@@ -24,5 +24,11 @@ export function createDelegationRouter(
     asyncHandler(controller.listDelegation)
   );
 
+  router.get(
+    "/send",
+    checkUser(coreDeps.jwtService),
+    asyncHandler(controller.listDelegationForSend)
+  );
+
   return router;
 }

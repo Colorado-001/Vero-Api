@@ -81,6 +81,8 @@ export class CreateDelegationUseCase {
           request.amountLimit.toString(),
           request.startDate!
         );
+
+        domainDelegation.updateSignedData(signedBlockchainDelegation);
       } else {
         throw new BadRequestError("Group wallet not supported at this time");
       }

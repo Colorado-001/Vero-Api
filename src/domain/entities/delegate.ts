@@ -19,6 +19,7 @@ export interface IDelegationProps {
   name: string;
   userId: string;
   amountLimit: number;
+  signedBlockchainDelegation?: any;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -50,6 +51,7 @@ export abstract class DelegationBase {
   protected _amountLimit: number;
   protected _createdAt: Date;
   protected _updatedAt: Date;
+  protected _signedBlockchainDelegation: any;
 
   constructor(props: IDelegationProps) {
     this._id = props.id || this.generateId();
@@ -100,8 +102,16 @@ export abstract class DelegationBase {
   get updatedAt(): Date {
     return this._updatedAt;
   }
+  get signedBlockchainDelegation(): any {
+    return this._signedBlockchainDelegation;
+  }
 
   // Business methods
+  public updateSignedData(data: any) {
+    this._signedBlockchainDelegation = data;
+    this._updatedAt = new Date();
+  }
+
   public updateAmountLimit(newLimit: number): void {
     if (newLimit <= 0) {
       throw new Error("Amount limit must be positive");

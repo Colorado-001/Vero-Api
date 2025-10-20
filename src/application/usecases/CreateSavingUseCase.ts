@@ -169,7 +169,7 @@ export class CreateSavingUseCase {
     });
 
     return new TimeBasedSaving({
-      frequency: "monthly",
+      frequency: data.frequency,
       name: data.name,
       dayOfMonth: data.dayOfMonth,
       amountToSave: data.amountToSave,

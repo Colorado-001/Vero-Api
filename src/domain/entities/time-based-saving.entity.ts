@@ -131,14 +131,26 @@ export class TimeBasedSaving {
   }
 
   private validate(): void {
-    if (this._frequency !== "monthly") {
+    if (
+      this._frequency !== "monthly" &&
+      this._frequency !== "every_n_minutes"
+    ) {
       throw new ValueError(
         `${this._frequency} frequency is not supported at this time`
       );
     }
 
-    if (this._dayOfMonth < 1 || this._dayOfMonth > 31) {
-      throw new Error("Day of month must be between 1 and 31");
+    if (this.frequency === "monthly") {
+      if (this._dayOfMonth < 1 || this._dayOfMonth > 31) {
+        throw new Error("Day of month must be between 1 and 31");
+      }
+    }
+
+    if (
+      this._frequency === "every_n_minutes" &&
+      (this._dayOfMonth < 1 || this._dayOfMonth > 60)
+    ) {
+      throw new Error("Minute internal must be from 1 to 60");
     }
 
     if (this._amountToSave <= 0) {
@@ -197,6 +209,9 @@ export class TimeBasedSaving {
         // Handle day 31 by using "L" for last day in shorter months
         const day = this._dayOfMonth > 28 ? "L" : this._dayOfMonth.toString();
         return `${minute} ${timeOfDay} ${day} * *`;
+
+      case "every_n_minutes":
+        return `${this._dayOfMonth} * * * *`;
 
       default:
         throw new ValueError(

@@ -5,6 +5,7 @@ export const AUTOFLOW_FREQUENCY = [
   "weekly",
   "monthly",
   "yearly",
+  "every_n_minutes",
 ] as const;
 
 export const SAVINGS_CONTRACT_ADDRESS =

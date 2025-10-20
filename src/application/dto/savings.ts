@@ -1,9 +1,12 @@
+import { AutoflowFrequency } from "../../types/saving";
+
 export interface CreateSavingRequest {
   dayOfMonth: number;
   amountToSave: number;
   tokenToSave: string;
   userId: string;
   name: string;
+  frequency: AutoflowFrequency;
 }
 
 export interface SavingDto {

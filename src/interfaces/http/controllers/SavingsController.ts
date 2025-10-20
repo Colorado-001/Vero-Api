@@ -3,15 +3,22 @@ import { CoreDependencies } from "../../../config/factory";
 import { Env } from "../../../config/env";
 import createLogger from "../../../logging/logger.config";
 import { AuthRequest } from "../express";
-import { createTimeBasedSchema } from "../schemas/savings";
+import {
+  createTimeBasedSchema,
+  triggerSavingsSchema,
+} from "../schemas/savings";
 import { validateJsonPayload } from "../../../utils/helpers";
 import { EntityManager } from "typeorm";
-import { CreateSavingUseCase } from "../../../application/usecases";
 import {
+  CreateSavingUseCase,
+  ExecuteSavingUseCase,
+} from "../../../application/usecases";
+import {
+  SavingExecutionRepository,
   TimeBasedSavingRepository,
   UserRepository,
 } from "../../../infrastructure/typeorm/repositories";
-import { Response } from "express";
+import { Request, Response } from "express";
 
 export class SavingsController {
   private readonly logger: winston.Logger;
@@ -48,6 +55,36 @@ export class SavingsController {
         });
 
         res.json(result);
+      }
+    );
+  };
+
+  triggerSavings = async (req: Request, res: Response) => {
+    const { savingsId } = validateJsonPayload(
+      req.body,
+      triggerSavingsSchema,
+      this.logger
+    );
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const savingsRepo = new TimeBasedSavingRepository(manager);
+        const userRepo = new UserRepository(manager);
+        const executionRepo = new SavingExecutionRepository(manager);
+
+        const useCase = new ExecuteSavingUseCase(
+          savingsRepo,
+          userRepo,
+          executionRepo,
+          this.coreDeps.savingsBlockchainService,
+          this.config
+        );
+
+        await useCase.execute(savingsId);
+
+        res.json({
+          success: true,
+        });
       }
     );
   };

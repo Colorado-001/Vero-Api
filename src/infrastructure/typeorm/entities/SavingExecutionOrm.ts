@@ -18,9 +18,9 @@ export class SavingExecutionOrm {
   @PrimaryColumn("varchar")
   id!: string;
 
-  @Column("varchar")
+  @Column("bigint")
   @Index()
-  savingId!: string;
+  savingId!: number;
 
   @Column("timestamp")
   @Index()
@@ -41,7 +41,7 @@ export class SavingExecutionOrm {
   amount!: number;
 
   @Column("varchar", { nullable: true })
-  transactionHash!: string;
+  transactionHash!: string | null;
 
   @Column("text", { nullable: true })
   errorMessage!: string;

@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { asyncHandler, checkUser } from "../middlewares/index.js";
+import { asyncHandler, checkUser, verifyWorker } from "../middlewares/index.js";
 import { SavingsController, TransferController } from "../controllers/index.js";
 import { Env } from "../../../config/env.js";
 import { CoreDependencies } from "../../../config/factory.js";
+import createLogger from "../../../logging/logger.config.js";
 
 export function createSavingsRouter(coreDeps: CoreDependencies, config: Env) {
   const router = Router();
@@ -13,6 +14,12 @@ export function createSavingsRouter(coreDeps: CoreDependencies, config: Env) {
     "/autoflow",
     checkUser(coreDeps.jwtService),
     asyncHandler(controller.createAutoflow)
+  );
+
+  router.post(
+    "/autoflow/trigger",
+    verifyWorker(config.WORKER_API_KEY, createLogger("Verify Worker", config)),
+    controller.triggerSavings
   );
 
   return router;

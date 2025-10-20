@@ -74,11 +74,73 @@ export class SavingsBlockchainService {
     );
   }
 
-  encodeSetSavingsGoalData(goalAmount: bigint, id: bigint): `0x${string}` {
+  private encodeSetSavingsGoalData(
+    goalAmount: bigint,
+    id: bigint
+  ): `0x${string}` {
     return encodeFunctionData({
       abi: SAVINGS_VAULT_ABI,
       functionName: "setSavingsGoal",
       args: [goalAmount, id],
+    });
+  }
+
+  async depositToSavingsGoal(
+    amount: number,
+    goalId: number,
+    userAddress: BlockchainAddress,
+    userPrivateKey: Hash
+  ) {
+    this.logger.debug({
+      message: "Input parameters",
+      data: {
+        amount,
+        goalId,
+        goalAmountType: typeof amount,
+        goalIdType: typeof goalId,
+      },
+    });
+
+    // Convert goalAmount to wei
+    const formattedAmount = parseEther(amount.toString());
+
+    // Convert goalId to BigInt - CRITICAL STEP
+    const goalIdBigInt = BigInt(goalId);
+
+    // DEBUG: Log converted values
+    this.logger.debug({
+      message: "Converted parameters",
+      data: {
+        formattedAmount: formattedAmount.toString(),
+        goalIdBigInt: goalIdBigInt.toString(),
+        formattedAmountHex: formattedAmount.toString(16),
+        goalIdBigIntHex: goalIdBigInt.toString(16),
+      },
+    });
+
+    // Encode the function call
+    const encodedData = this.encodeDepositToSavingsGoalData(goalIdBigInt);
+
+    const txHash = await this.executeWithPaymaster(
+      {
+        to: SAVINGS_CONTRACT_ADDRESS,
+        value: formattedAmount,
+        data: encodedData,
+        from: userAddress,
+      },
+      userPrivateKey
+    );
+
+    this.logger.info(`Deposit to goal ${goalId} completed successfully.`);
+
+    return { txHash };
+  }
+
+  private encodeDepositToSavingsGoalData(id: bigint): `0x${string}` {
+    return encodeFunctionData({
+      abi: SAVINGS_VAULT_ABI,
+      functionName: "deposit",
+      args: [id],
     });
   }
 

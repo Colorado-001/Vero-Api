@@ -37,6 +37,8 @@ export interface ISavingExecutionProps {
   errorMessage?: string;
   retryCount: number;
   metadata?: Record<string, any>;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ISavingsContractData {

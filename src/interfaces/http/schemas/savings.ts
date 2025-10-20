@@ -8,3 +8,7 @@ export const createTimeBasedSchema = z.object({
   tokenToSave: z.string(),
   name: z.string(),
 });
+
+export const triggerSavingsSchema = z.object({
+  savingsId: z.coerce.number().min(1),
+});

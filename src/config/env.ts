@@ -25,7 +25,14 @@ const envSchema = z.object({
 
   LOG_LEVEL: z.enum(["info", "debug", "error"]).default("info"),
   LOG_PATH: z.string().default("./logs"),
-  LOG_SILENT: z.boolean().default(false),
+  LOG_SILENT: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
+  LOG_TO_FILE: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
 
   DB_HOST: z.string(),
   DB_PORT: z.coerce.number(),

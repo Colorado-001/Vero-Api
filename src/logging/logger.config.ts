@@ -35,7 +35,10 @@ const createLogger = (label: string, config: Env) => {
       winston.format.json()
     ),
     defaultMeta: { service: "vero-api" },
-    transports: [
+  });
+
+  if (config.LOG_TO_FILE) {
+    const transports = [
       new winston.transports.File({
         filename: path.join(logPath, "error.log"),
         level: "error",
@@ -51,8 +54,10 @@ const createLogger = (label: string, config: Env) => {
       new winston.transports.File({
         filename: path.join(logPath, "all_combined.log"),
       }),
-    ],
-  });
+    ];
+
+    transports.forEach((t) => logger.add(t));
+  }
 
   if (process.env.NODE_ENV !== "test") {
     logger.add(
@@ -61,11 +66,6 @@ const createLogger = (label: string, config: Env) => {
           winston.format.splat(),
           winston.format.colorize(),
           winston.format.timestamp(),
-          // winston.format.printf(
-          //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          //   (info: TransformableInfo) =>
-          //     `${info.timestamp} ${info.level}: ${info.message}`
-          // )
           winston.format.printf(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             (info: TransformableInfo) => {

@@ -2,12 +2,20 @@ import { EntityManager, Repository } from "typeorm";
 import { UserOrmEntity } from "../entities/index.js";
 import { UserEntity } from "../../../domain/entities/index.js";
 import { IUserRepository } from "../../../domain/repositories/index.js";
+import { BlockchainAddress } from "../../../types/blockchain.js";
 
 export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserOrmEntity>;
 
   constructor(manager: EntityManager) {
     this.repo = manager.getRepository(UserOrmEntity);
+  }
+
+  async findByAddress(address: BlockchainAddress): Promise<UserEntity | null> {
+    const record = await this.repo.findOne({
+      where: { smartAccountAddress: address },
+    });
+    return record ? this.mapToDomain(record) : null;
   }
 
   private mapToDomain(record: UserOrmEntity): UserEntity {

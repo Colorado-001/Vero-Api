@@ -11,3 +11,4 @@ export * from "./GetTransferGasUseCase.js";
 export * from "./CreateSavingUseCase.js";
 export * from "./ExecuteSavingsUseCase.js";
 export * from "./ListUserAutoFlows.js";
+export * from "./CreateDelegationUseCase.js";

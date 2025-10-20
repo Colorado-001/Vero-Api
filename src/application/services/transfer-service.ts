@@ -5,8 +5,6 @@ import {
   http,
   PublicClient,
   formatEther,
-  toHex,
-  parseAbi,
   parseGwei,
   Hash,
 } from "viem";
@@ -131,12 +129,9 @@ export class WalletTransferService {
     }
   }
 
-  private async getSmartAccount(transferParams: TransferParams) {
+  async getSmartAccount(privateKey: string, address: BlockchainAddress) {
     this.logger.debug("getSmartAccount");
-    const userPrivateKey = decryptValue(
-      this.config.ENCRYPTION_KEY,
-      transferParams.walletData.privateKey
-    );
+    const userPrivateKey = decryptValue(this.config.ENCRYPTION_KEY, privateKey);
 
     const eoaAccount = privateKeyToAccount(userPrivateKey as `0x${string}`);
 
@@ -151,9 +146,7 @@ export class WalletTransferService {
 
     this.logger.debug("check is deployed");
 
-    const isDeployed = await this.checkOnChainDeployment(
-      transferParams.walletData.address
-    );
+    const isDeployed = await this.checkOnChainDeployment(address);
 
     this.logger.info(`Is deployed: ${isDeployed}`);
 
@@ -169,7 +162,10 @@ export class WalletTransferService {
   ): Promise<{ txHash: Hash; userOpHash: string }> {
     await this.confirmBalance(transferParams);
 
-    const smartAccount = await this.getSmartAccount(transferParams);
+    const smartAccount = await this.getSmartAccount(
+      transferParams.walletData.privateKey,
+      transferParams.walletData.address
+    );
 
     this.logger.debug(`Smart account: ${smartAccount.address.toString()}`);
 
@@ -240,7 +236,10 @@ export class WalletTransferService {
   }
 
   async estimateSponsoredGas(transferParams: TransferParams) {
-    const smartAccount = await this.getSmartAccount(transferParams);
+    const smartAccount = await this.getSmartAccount(
+      transferParams.walletData.privateKey,
+      transferParams.walletData.address
+    );
 
     const gasPrices = await this.getPimlicoGasPrices();
 

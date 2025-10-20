@@ -14,6 +14,7 @@ import {
 } from "../domain/ports/index.js";
 import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
 import {
+  DelegationService,
   JwtService,
   MonadTransferDetector,
   PortfolioValueService,
@@ -45,6 +46,7 @@ export type CoreDependencies = {
   savingsBlockchainService: SavingsBlockchainService;
   transferMonitor: MonadTransferDetector;
   worker: IWorker;
+  blockchainDelegationService: DelegationService;
   close: () => Promise<void>;
 };
 
@@ -109,6 +111,11 @@ export async function getCoreDependencies(
     walletTransferService
   );
 
+  const blockchainDelegationService = new DelegationService(
+    config,
+    walletTransferService
+  );
+
   // await transferDetector.start();
 
   instance = {
@@ -126,6 +133,7 @@ export async function getCoreDependencies(
     transferMonitor: transferDetector,
     savingsBlockchainService,
     worker,
+    blockchainDelegationService,
 
     close: async () => {
       try {

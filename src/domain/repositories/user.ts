@@ -1,8 +1,10 @@
+import { BlockchainAddress } from "../../types/blockchain.js";
 import { UserEntity } from "../entities/index.js";
 
 export interface IUserRepository {
   save(user: UserEntity): Promise<void>;
   findById(id: string): Promise<UserEntity | null>;
+  findByAddress(address: BlockchainAddress): Promise<UserEntity | null>;
   findByEmail(email: string): Promise<UserEntity | null>;
   findByUsername(username: string): Promise<UserEntity | null>;
   delete(id: string): Promise<void>;

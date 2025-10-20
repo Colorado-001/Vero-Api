@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler, checkUser, verifyWorker } from "../middlewares/index.js";
-import { SavingsController, TransferController } from "../controllers/index.js";
+import { SavingsController } from "../controllers/index.js";
 import { Env } from "../../../config/env.js";
 import { CoreDependencies } from "../../../config/factory.js";
 import createLogger from "../../../logging/logger.config.js";

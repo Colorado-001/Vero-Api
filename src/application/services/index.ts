@@ -7,3 +7,4 @@ export * from "./transfer-service.js";
 export * from "./monad-transfer-detector.js";
 export * from "./progress-tracking-service.js";
 export * from "./savings-blockchain-service.js";
+export * from "./delegation-service.js";

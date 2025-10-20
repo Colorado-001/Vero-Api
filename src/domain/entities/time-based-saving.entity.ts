@@ -7,7 +7,7 @@ import {
 import { ValueError } from "../../utils/errors";
 
 export class TimeBasedSaving {
-  private _id: string;
+  private _id: number;
   private _name: string;
   private _frequency: AutoflowFrequency;
   private _dayOfMonth: number;
@@ -126,8 +126,8 @@ export class TimeBasedSaving {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
-  private generateId(): string {
-    return `tbs_${uuid4()}`;
+  private generateId(): number {
+    return 0;
   }
 
   private validate(): void {
@@ -155,7 +155,7 @@ export class TimeBasedSaving {
   }
 
   // Getters
-  get id(): string {
+  get id(): number {
     return this._id;
   }
   get name(): string {
@@ -190,14 +190,13 @@ export class TimeBasedSaving {
   public getCronExpression(): string {
     const timeOfDay = "12"; // Default to 12:00 PM UTC
     const minute = "0";
-    const second = "0";
 
     switch (this._frequency) {
       case "monthly":
         // Run on specific day of month at specified time
         // Handle day 31 by using "L" for last day in shorter months
         const day = this._dayOfMonth > 28 ? "L" : this._dayOfMonth.toString();
-        return `${second} ${minute} ${timeOfDay} ${day} * *`;
+        return `${minute} ${timeOfDay} ${day} * *`;
 
       default:
         throw new ValueError(

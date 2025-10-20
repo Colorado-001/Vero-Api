@@ -1,4 +1,6 @@
-export type AutoflowFrequency = "daily" | "weekly" | "monthly" | "yearly";
+import { AUTOFLOW_FREQUENCY } from "../utils/constants";
+
+export type AutoflowFrequency = (typeof AUTOFLOW_FREQUENCY)[number];
 
 export interface ISavingProgress {
   totalSaved: number;
@@ -11,7 +13,7 @@ export interface ISavingProgress {
 }
 
 export interface ITimeBasedSavingProps {
-  id?: string;
+  id?: number;
   name: string;
   frequency: AutoflowFrequency;
   dayOfMonth: number;
@@ -26,7 +28,7 @@ export interface ITimeBasedSavingProps {
 
 export interface ISavingExecutionProps {
   id?: string;
-  savingId: string;
+  savingId: number;
   scheduledDate: Date;
   executedAt?: Date;
   status: ExecutionStatus;

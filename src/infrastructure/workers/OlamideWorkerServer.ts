@@ -1,4 +1,8 @@
-import axios, { AxiosInstance } from "axios";
+import axios, {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  isAxiosError,
+} from "axios";
 import { IWorker } from "../../domain/ports";
 import { WebhookConfig } from "../../types/worker";
 import { Env } from "../../config/env";
@@ -9,16 +13,16 @@ export class OlamideWorkerServer implements IWorker {
   private readonly axios: AxiosInstance;
   private readonly logger: winston.Logger;
 
-  constructor(baseURL: string, config: Env) {
+  constructor(config: Env) {
     this.axios = axios.create({
-      baseURL,
+      baseURL: config.WORKER_URL,
     });
 
     this.logger = createLogger(OlamideWorkerServer.name, config);
 
     this.logger.info({
       message: "OlamideWorkerServer initialized",
-      data: { baseURL },
+      data: { baseURL: config.WORKER_URL },
     });
   }
 
@@ -46,16 +50,19 @@ export class OlamideWorkerServer implements IWorker {
       extra,
     };
 
+    let requestConfig: InternalAxiosRequestConfig | undefined;
+
     this.logger.info({
       message: "Registering worker operation",
       data: { userId, cronExpression, ruleId: data.id, extra },
     });
 
     try {
-      const { data: result } = await this.axios.post<{ job_id: string }>(
-        "/schedulerx/jobs",
-        payload
-      );
+      const { data: result, config } = await this.axios.post<{
+        job_id: string;
+      }>("/schedulerx/jobs", payload);
+
+      requestConfig = config;
 
       this.logger.info({
         message: "Worker operation registered successfully",
@@ -64,14 +71,25 @@ export class OlamideWorkerServer implements IWorker {
 
       return result.job_id;
     } catch (error: any) {
-      this.logger.error({
-        message: "Failed to register worker operation",
-        data: {
-          userId,
-          ruleId: data.id,
-          error: error?.message ?? error,
-        },
-      });
+      if (isAxiosError(error)) {
+        this.logger.error({
+          message: "Failed to register worker operation",
+          data: {
+            error: error.response?.data ?? error.message ?? error,
+            config: error.config,
+          },
+        });
+      } else {
+        this.logger.error({
+          message: "Failed to register worker operation",
+          data: {
+            userId,
+            ruleId: data.id,
+            error: error?.message ?? error,
+            payload,
+          },
+        });
+      }
       throw error;
     }
   };

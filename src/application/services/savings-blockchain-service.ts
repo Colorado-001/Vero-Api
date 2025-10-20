@@ -1,5 +1,5 @@
 import winston from "winston";
-import { encodeFunctionData, formatEther, Hash } from "viem";
+import { encodeFunctionData, Hash, parseEther } from "viem";
 
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
@@ -9,7 +9,6 @@ import {
   SAVINGS_CONTRACT_ADDRESS,
   SAVINGS_VAULT_ABI,
 } from "../../utils/constants";
-import { uuidToBigInt } from "../../utils/helpers";
 
 export class SavingsBlockchainService {
   private readonly logger: winston.Logger;
@@ -23,30 +22,63 @@ export class SavingsBlockchainService {
 
   async setSavingsGoal(
     goalAmount: number,
-    goalId: string,
+    goalId: number,
     userAddress: BlockchainAddress,
     userPrivateKey: Hash
   ): Promise<void> {
-    const formattedAmount = formatEther(BigInt(goalAmount));
+    this.logger.debug({
+      message: "Input parameters",
+      data: {
+        goalAmount,
+        goalId,
+        goalAmountType: typeof goalAmount,
+        goalIdType: typeof goalId,
+      },
+    });
+
+    // Convert goalAmount to wei
+    const formattedAmount = parseEther(goalAmount.toString());
+
+    // Convert goalId to BigInt - CRITICAL STEP
+    const goalIdBigInt = BigInt(goalId);
+
+    // DEBUG: Log converted values
+    this.logger.debug({
+      message: "Converted parameters",
+      data: {
+        formattedAmount: formattedAmount.toString(),
+        goalIdBigInt: goalIdBigInt.toString(),
+        formattedAmountHex: formattedAmount.toString(16),
+        goalIdBigIntHex: goalIdBigInt.toString(16),
+      },
+    });
+
+    // Encode the function call
+    const encodedData = this.encodeSetSavingsGoalData(
+      formattedAmount,
+      goalIdBigInt
+    );
+
     await this.executeWithPaymaster(
       {
         to: SAVINGS_CONTRACT_ADDRESS,
         value: BigInt(0),
-        data: this.encodeSetSavingsGoalData(formattedAmount, goalId),
+        data: encodedData,
         from: userAddress,
       },
       userPrivateKey
     );
+
     this.logger.info(
       `Savings goal ${goalId} and Target = ${goalAmount} created successfully.`
     );
   }
 
-  encodeSetSavingsGoalData(goalAmount: string, id: string): `0x${string}` {
+  encodeSetSavingsGoalData(goalAmount: bigint, id: bigint): `0x${string}` {
     return encodeFunctionData({
       abi: SAVINGS_VAULT_ABI,
       functionName: "setSavingsGoal",
-      args: [BigInt(goalAmount), uuidToBigInt(id)],
+      args: [goalAmount, id],
     });
   }
 
@@ -73,7 +105,10 @@ export class SavingsBlockchainService {
       this.logger.info(`Paymaster transaction successful: ${txHash}`);
       return txHash;
     } catch (error: any) {
-      this.logger.error(`Paymaster transaction failed: ${error.message}`);
+      this.logger.error({
+        message: `Paymaster transaction failed: ${error.message}`,
+        data: transaction,
+      });
       throw error;
     }
   }

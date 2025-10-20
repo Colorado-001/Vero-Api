@@ -7,6 +7,7 @@ import {
   Index,
   ForeignKey,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from "typeorm";
 import { AutoflowFrequency } from "../../../types/saving";
 import { UserOrmEntity } from "./UserOrm";
@@ -15,8 +16,11 @@ import { SavingExecutionOrm } from "./SavingExecutionOrm";
 @Entity("time_based_savings")
 @Index("idx_user_active", ["userId", "isActive"])
 export class TimeBasedSavingOrm {
-  @PrimaryColumn("varchar")
-  id!: string;
+  @PrimaryGeneratedColumn({ type: "bigint" })
+  id!: number;
+
+  @Column("varchar")
+  name!: string;
 
   @Column({
     type: "enum",

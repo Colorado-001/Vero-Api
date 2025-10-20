@@ -10,6 +10,7 @@ import {
   IEmailTemplateParser,
   INotificationService,
   IPersistenceSessionManager,
+  IWorker,
 } from "../domain/ports/index.js";
 import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
 import {
@@ -17,6 +18,7 @@ import {
   MonadTransferDetector,
   PortfolioValueService,
   QrGeneratorService,
+  SavingsBlockchainService,
   TokenBalanceService,
   WalletSetupService,
   WalletTransferService,
@@ -29,6 +31,7 @@ import {
   createBundlerClient,
   createPaymasterClient,
 } from "viem/account-abstraction";
+import { OlamideWorkerServer } from "../infrastructure/workers/OlamideWorkerServer.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -39,7 +42,9 @@ export type CoreDependencies = {
   portfolioService: PortfolioValueService;
   walletTransferService: WalletTransferService;
   qrGenService: QrGeneratorService;
+  savingsBlockchainService: SavingsBlockchainService;
   transferMonitor: MonadTransferDetector;
+  worker: IWorker;
   close: () => Promise<void>;
 };
 
@@ -91,6 +96,19 @@ export async function getCoreDependencies(
     addresses
   );
 
+  const walletTransferService = new WalletTransferService(
+    config,
+    publicClient,
+    bundlerClient,
+    paymasterClient,
+    balanceService
+  );
+  const worker = new OlamideWorkerServer(config);
+  const savingsBlockchainService = new SavingsBlockchainService(
+    config,
+    walletTransferService
+  );
+
   // await transferDetector.start();
 
   instance = {
@@ -104,14 +122,10 @@ export async function getCoreDependencies(
       config.COINGECKO_API_KEY
     ),
     qrGenService: new QrGeneratorService(config),
-    walletTransferService: new WalletTransferService(
-      config,
-      publicClient,
-      bundlerClient,
-      paymasterClient,
-      balanceService
-    ),
+    walletTransferService,
     transferMonitor: transferDetector,
+    savingsBlockchainService,
+    worker,
 
     close: async () => {
       try {

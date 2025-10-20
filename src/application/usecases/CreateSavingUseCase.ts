@@ -5,7 +5,7 @@ import {
   IUserRepository,
 } from "../../domain/repositories";
 import { decryptValue } from "../../utils/encryption";
-import { CreateSavingRequest, CreateSavingResponse } from "../dto";
+import { CreateSavingRequest, SavingDto } from "../dto";
 import { SavingsBlockchainService } from "../services";
 import { IWorker } from "../../domain/ports";
 import { TriggerSaveWebhook } from "../../types/worker";
@@ -20,7 +20,6 @@ export class CreateSavingUseCase {
   constructor(
     private readonly savingRepository: ITimeBasedSavingRepository,
     private readonly userRepository: IUserRepository,
-    private readonly encryptionKey: string,
     private readonly savingsBlockchainService: SavingsBlockchainService,
     private readonly worker: IWorker,
     private readonly config: Env
@@ -28,7 +27,7 @@ export class CreateSavingUseCase {
     this.logger = createLogger(CreateSavingUseCase.name, config);
   }
 
-  async execute(request: CreateSavingRequest): Promise<CreateSavingResponse> {
+  async execute(request: CreateSavingRequest): Promise<SavingDto> {
     this.logger.info({
       message: "Received create saving request",
       data: { userId: request.userId, name: request.name },
@@ -83,35 +82,11 @@ export class CreateSavingUseCase {
     });
 
     // Save to repository
-    await this.savingRepository.save(saving);
+    const newSaving = await this.savingRepository.save(saving);
 
     this.logger.info({
       message: "Saving entity persisted to repository",
-      data: { id: saving.id, userId: saving.userId },
-    });
-
-    // Set goal on blockchain
-    const privKey = decryptValue(this.encryptionKey, user.privateKey);
-
-    this.logger.info({
-      message: "Calling blockchain setSavingsGoal",
-      data: {
-        goalId: saving.id,
-        amount: saving.amountToSave.toString(),
-        userAddress: user.smartAccountAddress,
-      },
-    });
-
-    await this.savingsBlockchainService.setSavingsGoal(
-      saving.amountToSave,
-      saving.id.split("_")[1],
-      user.smartAccountAddress,
-      privKey as Hash
-    );
-
-    this.logger.info({
-      message: "Blockchain goal set successfully",
-      data: { goalId: saving.id },
+      data: { id: newSaving.id, userId: newSaving.userId },
     });
 
     // Register operation in worker
@@ -124,45 +99,64 @@ export class CreateSavingUseCase {
           "X-Api-Key": this.config.WORKER_API_KEY,
         },
         body: {
-          savingsId: saving.id,
+          savingsId: newSaving.id.toString(),
         },
-        id: `rule_${saving.id}`,
+        id: `rule_${newSaving.id}`,
         method: "POST",
         timeout: 120,
         url: `${this.config.APP_URL}/v1/savings/autoflow/trigger`,
       },
       {
-        name: saving.name,
-        asset: saving.tokenToSave,
+        name: newSaving.name,
+        asset: newSaving.tokenToSave,
       }
     );
 
     this.logger.info({
       message: "Worker operation registered successfully",
-      data: { ruleId: `rule_${saving.id}`, cronExpr },
+      data: { ruleId: `rule_${newSaving.id}`, cronExpr },
+    });
+
+    // Set goal on blockchain
+    this.logger.info({
+      message: "Calling blockchain setSavingsGoal",
+      data: {
+        goalId: newSaving.id,
+        amount: newSaving.amountToSave.toString(),
+        userAddress: user.smartAccountAddress,
+      },
+    });
+
+    await this.savingsBlockchainService.setSavingsGoal(
+      newSaving.amountToSave,
+      newSaving.id,
+      user.smartAccountAddress,
+      user.privateKey as Hash
+    );
+
+    this.logger.info({
+      message: "Blockchain goal set successfully",
+      data: { goalId: newSaving.id },
     });
 
     // Return response
-    const response: CreateSavingResponse = {
-      success: true,
-      saving: {
-        id: saving.id,
-        name: saving.name,
-        frequency: saving.frequency,
-        dayOfMonth: saving.dayOfMonth,
-        amountToSave: saving.amountToSave,
-        tokenToSave: saving.tokenToSave,
-        userId: saving.userId,
-        isActive: saving.isActive,
-        progress: saving.getProgress(),
-        nextScheduledDate: saving.getProgress().nextScheduledDate,
-        createdAt: saving.createdAt,
-      },
+    const response: SavingDto = {
+      id: newSaving.id.toString(),
+      name: newSaving.name,
+      frequency: newSaving.frequency,
+      dayOfMonth: newSaving.dayOfMonth,
+      amountToSave: newSaving.amountToSave,
+      tokenToSave: newSaving.tokenToSave,
+      userId: newSaving.userId,
+      isActive: newSaving.isActive,
+      progress: newSaving.getProgress(),
+      nextScheduledDate: newSaving.getProgress().nextScheduledDate,
+      createdAt: newSaving.createdAt,
     };
 
     this.logger.info({
       message: "Create saving use case completed successfully",
-      data: { savingId: saving.id, userId: saving.userId },
+      data: { savingId: newSaving.id, userId: newSaving.userId },
     });
 
     return response;

@@ -10,7 +10,7 @@ export class ProgressTrackingService {
   ) {}
 
   async recordSuccessfulExecution(
-    savingId: string,
+    savingId: number,
     amount: number,
     transactionHash: string
   ): Promise<void> {
@@ -33,7 +33,7 @@ export class ProgressTrackingService {
   }
 
   async recordFailedExecution(
-    savingId: string,
+    savingId: number,
     amount: number,
     errorMessage: string
   ): Promise<void> {
@@ -55,7 +55,7 @@ export class ProgressTrackingService {
     await this.executionRepo.save(execution);
   }
 
-  async getSavingProgress(savingId: string): Promise<{
+  async getSavingProgress(savingId: number): Promise<{
     progress: any;
     recentExecutions: SavingExecution[];
     completionPercentage: number;

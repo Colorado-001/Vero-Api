@@ -132,6 +132,7 @@ export class WalletTransferService {
   }
 
   private async getSmartAccount(transferParams: TransferParams) {
+    this.logger.debug("getSmartAccount");
     const userPrivateKey = decryptValue(
       this.config.ENCRYPTION_KEY,
       transferParams.walletData.privateKey
@@ -147,6 +148,8 @@ export class WalletTransferService {
       deploySalt: "0x",
       signer: { account: eoaAccount },
     });
+
+    this.logger.debug("check is deployed");
 
     const isDeployed = await this.checkOnChainDeployment(
       transferParams.walletData.address
@@ -256,7 +259,7 @@ export class WalletTransferService {
         typeof transferParams.amount === "string"
           ? parseEther(transferParams.amount)
           : transferParams.amount,
-      data: "0x",
+      data: transferParams.data || "0x",
     };
 
     // Create bundler client for submitting user operations

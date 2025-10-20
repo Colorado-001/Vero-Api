@@ -1,5 +1,12 @@
 export const OTP_EXPIRY_SECONDS = 3 * 60;
 
+export const AUTOFLOW_FREQUENCY = [
+  "daily",
+  "weekly",
+  "monthly",
+  "yearly",
+] as const;
+
 export const SAVINGS_CONTRACT_ADDRESS =
   "0x3463617C7e0290077ad1Ba2Ee4872D1Ce6B49024";
 

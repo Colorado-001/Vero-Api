@@ -4,7 +4,7 @@ import { ExecutionStatus } from "../../utils/enums";
 
 export class SavingExecution {
   private _id: string;
-  private _savingId: string;
+  private _savingId: number;
   private _scheduledDate: Date;
   private _executedAt: Date | null;
   private _status: ExecutionStatus;

@@ -32,6 +32,13 @@ export class CreateDelegationUseCase {
     request: ICreateDelegationRequest
   ): Promise<ICreateDelegationResponse> {
     try {
+      const now = new Date();
+      const startDate = request.startDate ? request.startDate : now;
+
+      startDate.setHours(now.getHours());
+      startDate.setMinutes(now.getMinutes() + 3);
+      request.startDate = startDate;
+
       this.logger.info("Creating new delegation", {
         type: request.type,
         fromUserId: request.fromUserId,

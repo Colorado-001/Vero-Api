@@ -126,12 +126,13 @@ export class AllowanceDelegation extends DelegationBase {
   private _frequency: AllowanceFrequency;
   private _startDate: Date;
 
-  constructor(props: IAllowanceDelegationProps) {
+  constructor(props: IAllowanceDelegationProps, validate: boolean = true) {
     super(props);
     this._walletAddress = props.walletAddress;
     this._frequency = props.frequency;
     this._startDate = props.startDate;
-    this.validateAllowance();
+
+    if (validate) this.validateAllowance();
   }
 
   private validateAllowance(): void {

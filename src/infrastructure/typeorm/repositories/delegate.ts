@@ -21,18 +21,21 @@ export class DelegateRepository implements IDelegationRepository {
 
   private toDomain(model: DelegationOrm): Delegation {
     if (model.type === DelegationType.ALLOWANCE) {
-      return new AllowanceDelegation({
-        id: model.id,
-        type: model.type,
-        name: model.name,
-        userId: model.userId,
-        amountLimit: parseFloat(model.amountLimit as any),
-        walletAddress: model.walletAddress!,
-        frequency: model.frequency!,
-        startDate: model.startDate!,
-        createdAt: model.createdAt,
-        updatedAt: model.updatedAt,
-      });
+      return new AllowanceDelegation(
+        {
+          id: model.id,
+          type: model.type,
+          name: model.name,
+          userId: model.userId,
+          amountLimit: parseFloat(model.amountLimit as any),
+          walletAddress: model.walletAddress!,
+          frequency: model.frequency!,
+          startDate: model.startDate!,
+          createdAt: model.createdAt,
+          updatedAt: model.updatedAt,
+        },
+        false
+      );
     } else {
       return new GroupWalletDelegation({
         id: model.id,

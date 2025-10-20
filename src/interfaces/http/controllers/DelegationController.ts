@@ -13,6 +13,7 @@ import {
   CreateDelegationUseCase,
   CreateSavingUseCase,
   ExecuteSavingUseCase,
+  ListDelegationsUseCase,
   ListUserAutoFlowsUseCase,
 } from "../../../application/usecases";
 import {
@@ -76,18 +77,13 @@ export class DelegationController {
   listDelegation = async (req: AuthRequest, res: Response) => {
     await this.coreDeps.persistenceSessionManager.executeInTransaction(
       async (manager: EntityManager) => {
-        const savingsRepo = new TimeBasedSavingRepository(manager);
-        const userRepo = new UserRepository(manager);
+        const delegateRepo = new DelegateRepository(manager);
 
-        const useCase = new ListUserAutoFlowsUseCase(
-          savingsRepo,
-          userRepo,
-          this.config
-        );
+        const useCase = new ListDelegationsUseCase(delegateRepo, this.config);
 
-        const result = await useCase.execute(req.user.sub);
+        const result = await useCase.listAllDelegationsByUser(req.user.sub);
 
-        res.json(result);
+        res.json(result.delegations);
       }
     );
   };

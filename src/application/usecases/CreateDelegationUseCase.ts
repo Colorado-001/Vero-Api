@@ -98,10 +98,7 @@ export class CreateDelegationUseCase {
         request: this.sanitizeRequest(request),
       });
 
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw error;
     }
   }
 

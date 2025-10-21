@@ -9,6 +9,10 @@ export const createTimeBasedSchema = z.object({
   name: z.string(),
 });
 
+export const deleteTimeBasedSchema = z.object({
+  id: z.coerce.number().min(1),
+});
+
 export const triggerSavingsSchema = z.object({
   savingsId: z.coerce.number().min(1),
 });

@@ -26,6 +26,15 @@ export class OlamideWorkerServer implements IWorker {
     });
   }
 
+  deregisterOperation = async (id: string) => {
+    try {
+      await this.axios.delete(`/schedulerx/jobs/${id}`);
+    } catch (error) {
+      this.handleError(error, { id });
+      throw error;
+    }
+  };
+
   listOperations = async () => {
     const { data: result } = await this.axios.get<unknown>("/schedulerx/jobs");
     return result;
@@ -72,26 +81,28 @@ export class OlamideWorkerServer implements IWorker {
 
       return result.job_id;
     } catch (error: any) {
-      if (isAxiosError(error)) {
-        this.logger.error({
-          message: "Failed to register worker operation",
-          data: {
-            error: error.response?.data ?? error.message ?? error,
-            config: error.config,
-          },
-        });
-      } else {
-        this.logger.error({
-          message: "Failed to register worker operation",
-          data: {
-            userId,
-            ruleId: data.id,
-            error: error?.message ?? error,
-            payload,
-          },
-        });
-      }
+      this.handleError(error, { userId, payload, ruleId: data.id });
       throw error;
     }
   };
+
+  private handleError(error: any, extra: object = {}) {
+    if (isAxiosError(error)) {
+      this.logger.error({
+        message: "Failed to register worker operation",
+        data: {
+          error: error.response?.data ?? error.message ?? error,
+          config: error.config,
+        },
+      });
+    } else {
+      this.logger.error({
+        message: "Failed to register worker operation",
+        data: {
+          error: error?.message ?? error,
+          ...extra,
+        },
+      });
+    }
+  }
 }

@@ -5,12 +5,14 @@ import createLogger from "../../../logging/logger.config";
 import { AuthRequest } from "../express";
 import {
   createTimeBasedSchema,
+  deleteTimeBasedSchema,
   triggerSavingsSchema,
 } from "../schemas/savings";
 import { validateJsonPayload } from "../../../utils/helpers";
 import { EntityManager } from "typeorm";
 import {
   CreateSavingUseCase,
+  DeleteSavingUseCase,
   ExecuteSavingUseCase,
   ListUserAutoFlowsUseCase,
 } from "../../../application/usecases";
@@ -114,5 +116,31 @@ export class SavingsController {
     res.json({
       success: true,
     });
+  };
+
+  deleteAutoFlow = async (req: AuthRequest, res: Response) => {
+    const { id } = validateJsonPayload(
+      req.query,
+      deleteTimeBasedSchema,
+      this.logger
+    );
+
+    await this.coreDeps.persistenceSessionManager.executeInTransaction(
+      async (manager: EntityManager) => {
+        const savingsRepo = new TimeBasedSavingRepository(manager);
+
+        const useCase = new DeleteSavingUseCase(
+          savingsRepo,
+          this.coreDeps.worker,
+          this.config
+        );
+
+        await useCase.execute(id);
+
+        res.json({
+          success: true,
+        });
+      }
+    );
   };
 }

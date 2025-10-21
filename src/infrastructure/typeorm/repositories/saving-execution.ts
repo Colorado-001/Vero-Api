@@ -12,20 +12,23 @@ export class SavingExecutionRepository implements ISavingExecutionRepository {
   }
 
   private mapToDomain(record: SavingExecutionOrm): SavingExecution {
-    return new SavingExecution({
-      id: record.id,
-      amount: record.amount,
-      createdAt: record.createdAt,
-      errorMessage: record.errorMessage,
-      executedAt: record.executedAt,
-      metadata: record.metadata,
-      retryCount: record.retryCount,
-      savingId: record.savingId,
-      scheduledDate: record.scheduledDate,
-      status: record.status,
-      transactionHash: record.transactionHash || undefined,
-      updatedAt: record.updatedAt,
-    });
+    return new SavingExecution(
+      {
+        id: record.id,
+        amount: record.amount,
+        createdAt: record.createdAt,
+        errorMessage: record.errorMessage,
+        executedAt: record.executedAt,
+        metadata: record.metadata,
+        retryCount: record.retryCount,
+        savingId: record.savingId,
+        scheduledDate: record.scheduledDate,
+        status: record.status,
+        transactionHash: record.transactionHash || undefined,
+        updatedAt: record.updatedAt,
+      },
+      false
+    );
   }
 
   async save(execution: SavingExecution): Promise<SavingExecution> {

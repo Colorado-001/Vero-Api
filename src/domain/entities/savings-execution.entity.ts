@@ -16,7 +16,7 @@ export class SavingExecution {
   private _createdAt: Date;
   private _updatedAt: Date;
 
-  constructor(props: ISavingExecutionProps) {
+  constructor(props: ISavingExecutionProps, validate = true) {
     this._id = props.id || this.generateId();
     this._savingId = props.savingId;
     this._scheduledDate = props.scheduledDate;
@@ -30,7 +30,7 @@ export class SavingExecution {
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
 
-    this.validate();
+    if (validate) this.validate();
   }
 
   private generateId(): string {

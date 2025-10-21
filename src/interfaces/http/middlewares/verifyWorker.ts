@@ -10,7 +10,7 @@ export const verifyWorker =
       data: { headers: req.headers, origin: req.hostname },
     });
 
-    const apiKey = req.headers["X-Api-Key"];
+    const apiKey = req.headers["x-api-key"];
 
     if (apiKey !== expectedKey) {
       throw new ForbiddenError("Invalid worker api key");

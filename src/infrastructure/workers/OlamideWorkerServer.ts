@@ -26,6 +26,11 @@ export class OlamideWorkerServer implements IWorker {
     });
   }
 
+  listOperations = async () => {
+    const { data: result } = await this.axios.get<unknown>("/schedulerx/jobs");
+    return result;
+  };
+
   registerOperation = async <T extends object>(
     cronExpression: string,
     userId: string,
@@ -50,19 +55,15 @@ export class OlamideWorkerServer implements IWorker {
       extra,
     };
 
-    let requestConfig: InternalAxiosRequestConfig | undefined;
-
     this.logger.info({
       message: "Registering worker operation",
       data: { userId, cronExpression, ruleId: data.id, extra },
     });
 
     try {
-      const { data: result, config } = await this.axios.post<{
+      const { data: result } = await this.axios.post<{
         job_id: string;
       }>("/schedulerx/jobs", payload);
-
-      requestConfig = config;
 
       this.logger.info({
         message: "Worker operation registered successfully",

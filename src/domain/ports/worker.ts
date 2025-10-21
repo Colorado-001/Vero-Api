@@ -7,4 +7,5 @@ export interface IWorker {
     data: WebhookConfig<T>,
     extra?: Record<string, any>
   ) => Promise<string>; // returns opID
+  listOperations: () => Promise<unknown>;
 }

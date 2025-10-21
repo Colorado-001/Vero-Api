@@ -67,6 +67,8 @@ export async function createHTTPServer(config: Env) {
   app.use(errorConverter);
   app.use(errorHandler);
 
+  coreDeps.domainEventBus.start();
+
   return {
     app,
     close: coreDeps.close,

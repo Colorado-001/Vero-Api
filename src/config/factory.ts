@@ -142,7 +142,6 @@ export async function getCoreDependencies(
   emailNotificationHandler.setupSubscriptions(domainEventBus);
   inAppNotificationHandler.setupSubscriptions(domainEventBus);
 
-  domainEventBus.start();
   // await transferDetector.start();
 
   instance = {

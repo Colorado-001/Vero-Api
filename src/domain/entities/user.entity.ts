@@ -66,6 +66,9 @@ export class UserEntity {
   get id() {
     return this._id;
   }
+  get displayName() {
+    return this._username || this._email;
+  }
   get privateKey() {
     return this._privateKey;
   }

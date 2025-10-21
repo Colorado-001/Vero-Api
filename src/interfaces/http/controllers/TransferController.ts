@@ -6,6 +6,7 @@ import { Env } from "../../../config/env";
 import { CoreDependencies } from "../../../config/factory";
 import { AuthRequest } from "../express";
 import {
+  DelegateRepository,
   TransactionRepository,
   UserRepository,
 } from "../../../infrastructure/typeorm/repositories";
@@ -36,10 +37,12 @@ export class TransferController {
     await this.coreDeps.persistenceSessionManager.executeInTransaction(
       async (manager: EntityManager) => {
         const userRepo = new UserRepository(manager);
+        const delegationRepo = new DelegateRepository(manager);
 
         const useCase = new GetTransferGasUseCase(
           this.coreDeps.walletTransferService,
-          userRepo
+          userRepo,
+          delegationRepo
         );
 
         const result = await useCase.execute(
@@ -62,11 +65,14 @@ export class TransferController {
       async (manager: EntityManager) => {
         const userRepo = new UserRepository(manager);
         const txnRepo = new TransactionRepository(manager);
+        const delegationRepo = new DelegateRepository(manager);
 
         const useCase = new InitiateTransferUseCase(
           this.coreDeps.walletTransferService,
           userRepo,
           txnRepo,
+          delegationRepo,
+          this.coreDeps.domainEventBus,
           this.config
         );
 

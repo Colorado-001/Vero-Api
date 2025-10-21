@@ -1,4 +1,5 @@
 import {
+  IDelegationRepository,
   ITransactionRepository,
   IUserRepository,
 } from "../../domain/repositories";
@@ -12,6 +13,8 @@ import { TransactionGas } from "../../types/transaction";
 import winston from "winston";
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
+import { IDomainEventBus } from "../../domain/ports";
+import { AllowanceWithdrawnEvent } from "../../domain/events";
 
 export class InitiateTransferUseCase {
   private readonly logger: winston.Logger;
@@ -20,9 +23,26 @@ export class InitiateTransferUseCase {
     private readonly transferService: WalletTransferService,
     private readonly userRepo: IUserRepository,
     private readonly txnRepo: ITransactionRepository,
+    private readonly delegationRepo: IDelegationRepository,
+    private readonly domainEventBus: IDomainEventBus,
     config: Env
   ) {
     this.logger = createLogger("InitiateTransferUseCase", config);
+  }
+
+  private async getSignedDelegation(delegationId: string) {
+    const delegation = await this.delegationRepo.findById(delegationId);
+
+    this.logger.debug({
+      message: "Fetched delegation",
+      data: delegation,
+    });
+
+    if (!delegation || !delegation.signedBlockchainDelegation) {
+      throw new NotFoundError("Delegation not found");
+    }
+
+    return delegation;
   }
 
   private async saveTxn(
@@ -75,6 +95,10 @@ export class InitiateTransferUseCase {
       }
     }
 
+    const userDelegation = delegation
+      ? await this.getSignedDelegation(delegation)
+      : null;
+
     const gas = await this.transferService.estimateSponsoredGas({
       amount,
       to,
@@ -84,7 +108,7 @@ export class InitiateTransferUseCase {
       },
       decimals,
       tokenAddress: tokenAddress || undefined,
-      delegation,
+      delegation: userDelegation?.signedBlockchainDelegation,
     });
 
     this.logger.debug("Gas", gas);
@@ -94,14 +118,12 @@ export class InitiateTransferUseCase {
         await this.transferService.sponsorTransaction({
           amount,
           to,
-          delegation,
+          delegation: userDelegation?.signedBlockchainDelegation,
           walletData: {
             address: user.smartAccountAddress,
             privateKey: user.privateKey,
           },
         });
-
-      this.logger.debug("Txn Hash", { txHash, userOpHash });
 
       this.logger.info("Save Txn Info");
 
@@ -114,6 +136,16 @@ export class InitiateTransferUseCase {
         gas,
         tokenAddress
       );
+
+      if (userDelegation) {
+        const event = new AllowanceWithdrawnEvent({
+          allocationName: userDelegation.name,
+          amount: `${amount} ${tokenSymbol?.toUpperCase() || "MON"}`,
+          ownerUserId: userDelegation.userId,
+          withdrawnBy: user.displayName,
+        });
+        this.domainEventBus.publish(event);
+      }
 
       return;
     }

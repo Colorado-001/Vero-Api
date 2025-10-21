@@ -108,8 +108,7 @@ export async function getCoreDependencies(
     publicClient,
     bundlerClient,
     paymasterClient,
-    balanceService,
-    new DelegateRepository(dataSource.manager)
+    balanceService
   );
   const worker = new OlamideWorkerServer(config);
   const savingsBlockchainService = new SavingsBlockchainService(

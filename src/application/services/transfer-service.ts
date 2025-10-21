@@ -47,7 +47,7 @@ interface TransferParams {
   to: string;
   amount: string | bigint; // user-readable
   data?: Hash;
-  delegation?: string;
+  delegation?: any;
   tokenAddress?: BlockchainAddress; // optional for ERC20
   decimals?: number; // ERC20 decimals, default 18
   walletData: {
@@ -64,8 +64,7 @@ export class WalletTransferService {
     private readonly publicClient: PublicClient,
     private readonly bundlerClient: BundlerClient,
     private readonly paymasterClient: ReturnType<typeof createPaymasterClient>,
-    private readonly balanceService: TokenBalanceService,
-    private readonly delegationRepo: IDelegationRepository
+    private readonly balanceService: TokenBalanceService
   ) {
     this.logger = createLogger("WalletTransferService", config);
   }
@@ -162,10 +161,8 @@ export class WalletTransferService {
   async sponsorTransaction(
     transferParams: TransferParams
   ): Promise<{ txHash: Hash; userOpHash: string }> {
-    const signedDelegation = await this.getSignedDelegation(transferParams);
-
     // TODO: Check delegation balance
-    if (!signedDelegation) await this.confirmBalance(transferParams);
+    if (!transferParams.delegation) await this.confirmBalance(transferParams);
 
     const smartAccount = await this.getSmartAccount(
       transferParams.walletData.privateKey,
@@ -200,8 +197,8 @@ export class WalletTransferService {
 
     let userOpHash;
 
-    if (signedDelegation) {
-      const delegations = [[signedDelegation]];
+    if (transferParams.delegation) {
+      const delegations = [[transferParams.delegation]];
 
       const transaction = calls[0];
 
@@ -258,8 +255,6 @@ export class WalletTransferService {
   }
 
   async estimateSponsoredGas(transferParams: TransferParams) {
-    const signedDelegation = await this.getSignedDelegation(transferParams);
-
     const smartAccount = await this.getSmartAccount(
       transferParams.walletData.privateKey,
       transferParams.walletData.address
@@ -298,8 +293,8 @@ export class WalletTransferService {
 
     let userOp;
 
-    if (signedDelegation) {
-      const delegations = [[signedDelegation]];
+    if (transferParams.delegation) {
+      const delegations = [[transferParams.delegation]];
 
       const executions = createExecution({
         target: transaction.to,
@@ -379,29 +374,6 @@ export class WalletTransferService {
       likelyCostWei: likelyCost,
       likelyCostEth: formatEther(BigInt(likelyCost)),
     };
-  }
-
-  private async getSignedDelegation(transferParams: TransferParams) {
-    let signedDelegation = null;
-
-    if (transferParams.delegation) {
-      const delegation = await this.delegationRepo.findById(
-        transferParams.delegation
-      );
-
-      this.logger.debug({
-        message: "Fetched delegation",
-        data: delegation,
-      });
-
-      if (!delegation || !delegation.signedBlockchainDelegation) {
-        throw new NotFoundError("Delegation not found");
-      }
-
-      signedDelegation = delegation.signedBlockchainDelegation;
-    }
-
-    return signedDelegation;
   }
 
   private async getPimlicoGasPrices() {

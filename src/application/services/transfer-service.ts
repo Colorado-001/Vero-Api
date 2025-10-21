@@ -39,6 +39,7 @@ import {
   createPaymasterClient,
 } from "viem/account-abstraction";
 import { IDelegationRepository } from "../../domain/repositories";
+import { availableMemory } from "process";
 
 export interface SponsoredTransferConfig {
   gasPolicy?: {
@@ -430,6 +431,7 @@ export class WalletTransferService {
         `Token ${tokenAddress} balance is ${balance.formatted}`,
         balance
       );
+      this.logger.info(`Compare with transfer amount ${amount}`);
 
       if (Number(balance.formatted) < Number(amount)) {
         throw new InsufficientAmountError(

@@ -22,6 +22,9 @@ export class NotificationRepository implements INotificationRepository {
       },
       take: options.size,
       skip: offset,
+      order: {
+        createdAt: "DESC",
+      },
     });
     return models.map(this.toDomain);
   }

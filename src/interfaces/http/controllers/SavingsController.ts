@@ -97,6 +97,7 @@ export class SavingsController {
           userRepo,
           executionRepo,
           this.coreDeps.savingsBlockchainService,
+          this.coreDeps.domainEventBus,
           this.config
         );
 

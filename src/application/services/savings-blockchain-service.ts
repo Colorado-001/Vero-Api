@@ -1,5 +1,5 @@
 import winston from "winston";
-import { encodeFunctionData, Hash, parseEther } from "viem";
+import { encodeFunctionData, formatEther, Hash, parseEther } from "viem";
 
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
@@ -155,7 +155,7 @@ export class SavingsBlockchainService {
   ): Promise<Hash> {
     try {
       const { txHash } = await this.walletTransferService.sponsorTransaction({
-        amount: transaction.value,
+        amount: formatEther(transaction.value),
         to: transaction.to,
         data: transaction.data,
         walletData: {

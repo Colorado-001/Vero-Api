@@ -3,3 +3,4 @@ export * from "./session-manager.js";
 export * from "./email-template-parser.js";
 export * from "./notification-service.js";
 export * from "./worker.js";
+export * from "./domain-event-bus.js";

@@ -1,9 +1,6 @@
 import { v4 as uuid4 } from "uuid";
 import { OtpEntity } from "../../domain/entities/index.js";
-import {
-  IEmailTemplateParser,
-  INotificationService,
-} from "../../domain/ports/index.js";
+import { IDomainEventBus } from "../../domain/ports/index.js";
 import {
   IOtpRepository,
   IUserRepository,
@@ -12,13 +9,13 @@ import { EmailSignupOtpData } from "../../types/common.js";
 import { NotFoundError } from "../../utils/errors/index.js";
 import { generateSecureOtp } from "../../utils/helpers.js";
 import { EmailSignupDto } from "../dto/index.js";
+import { SendVerifyOtpEvent } from "../../domain/events/send-verify-otp.js";
 
 export class LoginUseCase {
   constructor(
     private readonly otpRepo: IOtpRepository,
     private readonly userRepo: IUserRepository,
-    private readonly emailTemplateParser: IEmailTemplateParser,
-    private readonly notificationService: INotificationService
+    private readonly domainEventBus: IDomainEventBus
   ) {}
 
   async execute(input: EmailSignupDto): Promise<string> {
@@ -35,15 +32,16 @@ export class LoginUseCase {
       email: input.email,
     });
 
-    const { body, subject } = await this.emailTemplateParser.getBody(
-      "loginOtp",
-      {
-        code: otpCode,
-      }
-    );
-
     await this.otpRepo.save(otp);
-    await this.notificationService.sendEmail(body, input.email, subject);
+
+    const event = new SendVerifyOtpEvent({
+      action: "login",
+      code: otpCode,
+      identifier: input.email,
+      identifierType: "email",
+      userId: user.id,
+    });
+    this.domainEventBus.publish(event);
 
     return token;
   }

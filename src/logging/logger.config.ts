@@ -7,16 +7,11 @@ import { Env } from "../config/env";
 const loggerCache = new Map<string, winston.Logger>();
 
 export const cleanupLoggers = (): void => {
-  console.log("Cleaning up loggers...");
-
-  for (const [label, logger] of loggerCache) {
-    console.log(`Closing logger: ${label}`);
+  for (const [_, logger] of loggerCache) {
     logger.close();
-    console.log(`Logger ${label} closed`);
   }
 
   loggerCache.clear();
-  console.log("All loggers cleaned up");
 };
 
 const createLogger = (label: string, config: Env) => {

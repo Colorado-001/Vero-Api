@@ -34,8 +34,7 @@ export class AuthController {
         const useCase = new LoginUseCase(
           otpRepo,
           userRepo,
-          this.coreDeps.emailTemplateParser,
-          this.coreDeps.notificationService
+          this.coreDeps.domainEventBus
         );
 
         const token = await useCase.execute({ email });

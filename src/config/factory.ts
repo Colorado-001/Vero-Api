@@ -7,6 +7,7 @@ import {
   initializeDataSource,
 } from "../infrastructure/typeorm/data-source.js";
 import {
+  IDomainEventBus,
   IEmailTemplateParser,
   INotificationService,
   IPersistenceSessionManager,
@@ -34,6 +35,8 @@ import {
 } from "viem/account-abstraction";
 import { OlamideWorkerServer } from "../infrastructure/workers/OlamideWorkerServer.js";
 import { DelegateRepository } from "../infrastructure/typeorm/repositories/delegate.js";
+import { InMemoryDomainEventBus } from "../infrastructure/domain-event-bus/in-mem.js";
+import { EmailNotificationHandler } from "../application/event-handlers/notifications/EmailNotificationHandler.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -48,6 +51,7 @@ export type CoreDependencies = {
   transferMonitor: MonadTransferDetector;
   worker: IWorker;
   blockchainDelegationService: DelegationService;
+  domainEventBus: IDomainEventBus;
   close: () => Promise<void>;
 };
 
@@ -91,8 +95,6 @@ export async function getCoreDependencies(
 
   const addresses = users.map((a) => a.smartAccountAddress);
 
-  console.log(`Found ${addresses.length} addresses`);
-
   const transferDetector = new MonadTransferDetector(
     publicClient,
     config,
@@ -118,12 +120,29 @@ export async function getCoreDependencies(
     walletTransferService
   );
 
+  const domainEventBus = new InMemoryDomainEventBus(config);
+
+  // Infra
+  const emailTemplateParser = createEmailTemplateParserService(config);
+  const notificationService = createNotificationService(config);
+
+  // Event Handlers
+  const emailNotificationHandler = new EmailNotificationHandler(
+    emailTemplateParser,
+    notificationService,
+    config
+  );
+
+  // Setup subscriptions
+  emailNotificationHandler.setupSubscriptions(domainEventBus);
+
+  domainEventBus.start();
   // await transferDetector.start();
 
   instance = {
     persistenceSessionManager,
-    emailTemplateParser: createEmailTemplateParserService(config),
-    notificationService: createNotificationService(config),
+    emailTemplateParser,
+    notificationService,
     walletSetupService: walletService,
     jwtService: new JwtService(config.JWT_SECRET),
     portfolioService: new PortfolioValueService(
@@ -136,10 +155,12 @@ export async function getCoreDependencies(
     savingsBlockchainService,
     worker,
     blockchainDelegationService,
+    domainEventBus,
 
     close: async () => {
       try {
-        transferDetector.stop();
+        domainEventBus.stop();
+        // transferDetector.stop();
         await closeDataSource(dataSource);
         cleanupLoggers();
       } catch (e) {

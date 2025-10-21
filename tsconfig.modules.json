@@ -1,4 +1,16 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "module": "commonjs", "outDir": "./dist-common", "moduleResolution": null },
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "./dist-common",
+    "moduleResolution": "node"
+  },
+  "files": [
+    "src/infrastructure/typeorm/typeorm-cli-data-source.ts"
+  ],
+  "include": [
+    "src/infrastructure/typeorm/migrations/**/*.ts",
+    "src/domain/entities/**/*.ts",
+    "src/infrastructure/typeorm/entities/**/*.ts"
+  ]
 }

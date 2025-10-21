@@ -20,13 +20,13 @@ export class EmailNotificationHandler {
   }
 
   setupSubscriptions(eventBus: IDomainEventBus): void {
-    eventBus.subscribe<SendVerifyOtpEvent>("SendVerifyOtp", (event) =>
+    eventBus.subscribe<SendVerifyOtpEvent>(SendVerifyOtpEvent.name, (event) =>
       this.onSendVerifyOtp(event)
     );
   }
 
   private async onSendVerifyOtp(event: SendVerifyOtpEvent): Promise<void> {
-    this.logger.debug(`${event.eventName} received...`);
+    this.logger.debug(`${SendVerifyOtpEvent.eventName} received...`);
 
     const payload = event.getPayload();
 

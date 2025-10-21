@@ -5,7 +5,7 @@ export abstract class DomainEvent<T extends object = object> {
   private readonly occurredOn: Date;
   private readonly version: number = 1;
 
-  public abstract get eventName(): string;
+  static eventName: string;
   protected abstract get aggregateId(): string;
 
   constructor(private readonly payload: T) {
@@ -31,7 +31,7 @@ export abstract class DomainEvent<T extends object = object> {
 
   toJSON(): object {
     return {
-      eventName: this.eventName,
+      eventName: (this.constructor as typeof DomainEvent).eventName,
       eventId: this.eventId,
       occurredOn: this.occurredOn.toISOString(),
       version: this.version,

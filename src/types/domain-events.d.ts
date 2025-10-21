@@ -1,5 +1,6 @@
 export type AllowanceWithdrawnPayloadType = {
   withdrawnBy: string;
+  allocationName: string;
   amount: string;
   ownerUserId: string;
 };

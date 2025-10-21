@@ -26,7 +26,7 @@ export class InMemoryDomainEventBus implements IDomainEventBus {
     }
 
     try {
-      const eventName = event.eventName;
+      const eventName = (event.constructor as typeof DomainEvent).eventName;
       const eventHandlers = this.handlers.get(eventName) || [];
 
       for (const handler of eventHandlers) {

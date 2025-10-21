@@ -37,6 +37,8 @@ import { OlamideWorkerServer } from "../infrastructure/workers/OlamideWorkerServ
 import { DelegateRepository } from "../infrastructure/typeorm/repositories/delegate.js";
 import { InMemoryDomainEventBus } from "../infrastructure/domain-event-bus/in-mem.js";
 import { EmailNotificationHandler } from "../application/event-handlers/notifications/EmailNotificationHandler.js";
+import { InAppNotificationHandler } from "../application/event-handlers/notifications/InAppNotificationHandler.js";
+import { NotificationRepository } from "../infrastructure/typeorm/repositories/notification.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -132,9 +134,14 @@ export async function getCoreDependencies(
     notificationService,
     config
   );
+  const inAppNotificationHandler = new InAppNotificationHandler(
+    new NotificationRepository(dataSource.manager),
+    config
+  );
 
   // Setup subscriptions
   emailNotificationHandler.setupSubscriptions(domainEventBus);
+  inAppNotificationHandler.setupSubscriptions(domainEventBus);
 
   domainEventBus.start();
   // await transferDetector.start();

@@ -2,12 +2,28 @@ import { EntityManager, Repository } from "typeorm";
 import { NotificationOrm } from "../entities/index.js";
 import { NotificationEntity } from "../../../domain/entities/index.js";
 import { INotificationRepository } from "../../../domain/repositories/index.js";
+import { PageOptions } from "../../../types/common.js";
 
 export class NotificationRepository implements INotificationRepository {
   private readonly repo: Repository<NotificationOrm>;
 
   constructor(manager: EntityManager) {
     this.repo = manager.getRepository(NotificationOrm);
+  }
+
+  async findByUserId(
+    userId: string,
+    options: PageOptions
+  ): Promise<NotificationEntity[]> {
+    const offset = (options.page - 1) * options.size;
+    const models = await this.repo.find({
+      where: {
+        userId,
+      },
+      take: options.size,
+      skip: offset,
+    });
+    return models.map(this.toDomain);
   }
 
   private toDomain(model: NotificationOrm): NotificationEntity {

@@ -5,3 +5,4 @@ export * from "./webhook.js";
 export * from "./transfer.js";
 export * from "./savings.js";
 export * from "./delegation.js";
+export * from "./notification.js";

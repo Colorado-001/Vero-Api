@@ -6,6 +6,7 @@ import { getCoreDependencies } from "../../config/factory.js";
 import {
   createAuthRouter,
   createDelegationRouter,
+  createNotificationRouter,
   createSavingsRouter,
   createTransferRouter,
   createUserRouter,
@@ -53,6 +54,11 @@ export async function createHTTPServer(config: Env) {
     createTransferRouter(coreDeps, config)
   );
   app.use("/v1/savings", express.json(), createSavingsRouter(coreDeps, config));
+  app.use(
+    "/v1/notifications",
+    express.json(),
+    createNotificationRouter(coreDeps, config)
+  );
   app.use(
     "/v1/delegations",
     express.json(),

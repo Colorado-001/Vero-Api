@@ -48,4 +48,13 @@ export class NotificationEntity {
   get createdAt(): Date {
     return this._createdAt;
   }
+
+  toJSON() {
+    return {
+      id: this._id,
+      message: this._message,
+      level: this._level,
+      createdAt: this._createdAt.toISOString(),
+    };
+  }
 }

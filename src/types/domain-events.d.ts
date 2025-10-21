@@ -1,3 +1,5 @@
+import { TimeBasedSaving } from "../domain/entities";
+
 export type AllowanceWithdrawnPayloadType = {
   withdrawnBy: string;
   allocationName: string;
@@ -18,3 +20,20 @@ export type DomainEventSubscription = {
   eventName: string;
   unsubscribe(): void;
 };
+
+type BaseSavingExecutionEvent = {
+  saving: TimeBasedSaving;
+};
+
+type SavingExecutionSuccessfulEvent = {
+  type: "success";
+} & BaseSavingExecutionEvent;
+
+type SavingExecutionFailedEvent = {
+  type: "failed";
+  error: unknown;
+} & BaseSavingExecutionEvent;
+
+export type SavingExecutionEventPayloadType =
+  | SavingExecutionSuccessfulEvent
+  | SavingExecutionFailedEvent;

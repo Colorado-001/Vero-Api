@@ -1,6 +1,5 @@
 import {
   Entity,
-  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -12,6 +11,7 @@ import {
 import { AutoflowFrequency } from "../../../types/saving";
 import { UserOrmEntity } from "./UserOrm";
 import { SavingExecutionOrm } from "./SavingExecutionOrm";
+import { AUTOFLOW_FREQUENCY } from "../../../utils/constants";
 
 @Entity("time_based_savings")
 @Index("idx_user_active", ["userId", "isActive"])
@@ -24,7 +24,7 @@ export class TimeBasedSavingOrm {
 
   @Column({
     type: "enum",
-    enum: ["daily", "weekly", "monthly", "yearly"],
+    enum: AUTOFLOW_FREQUENCY,
   })
   frequency!: AutoflowFrequency;
 

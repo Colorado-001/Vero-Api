@@ -198,6 +198,10 @@ export class TimeBasedSaving {
     return this._updatedAt;
   }
 
+  get displayAmount(): string {
+    return `${this._amountToSave} ${this._tokenToSave.toUpperCase()}`;
+  }
+
   // Business methods
   public getCronExpression(): string {
     const timeOfDay = "12"; // Default to 12:00 PM UTC

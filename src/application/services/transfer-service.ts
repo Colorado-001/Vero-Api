@@ -23,7 +23,11 @@ import { TokenBalanceService } from "./token-balance-service";
 import winston from "winston";
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
-import { BadRequestError, NotFoundError } from "../../utils/errors";
+import {
+  BadRequestError,
+  InsufficientAmountError,
+  NotFoundError,
+} from "../../utils/errors";
 import {
   Implementation,
   toMetaMaskSmartAccount,
@@ -428,7 +432,9 @@ export class WalletTransferService {
       );
 
       if (Number(balance.formatted) < Number(amount)) {
-        throw new BadRequestError("Insufficient funds to complete transfer");
+        throw new InsufficientAmountError(
+          "Insufficient funds to complete transfer"
+        );
       }
     } else {
       const balance = await this.balanceService.getNativeBalance(
@@ -441,7 +447,9 @@ export class WalletTransferService {
       );
 
       if (Number(balance.formattedBalance) < Number(amount)) {
-        throw new BadRequestError("Insufficient funds to complete transfer");
+        throw new InsufficientAmountError(
+          "Insufficient funds to complete transfer"
+        );
       }
     }
   }

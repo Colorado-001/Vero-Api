@@ -15,6 +15,8 @@ import {
 } from "../../domain/entities";
 import { ExecutionStatus } from "../../utils/enums";
 import { BlockchainAddress } from "../../types/blockchain";
+import { IDomainEventBus } from "../../domain/ports";
+import { SavingExecutionEvent } from "../../domain/events";
 
 export class ExecuteSavingUseCase {
   private readonly logger: winston.Logger;
@@ -24,60 +26,90 @@ export class ExecuteSavingUseCase {
     private readonly userRepo: IUserRepository,
     private readonly executionRepo: ISavingExecutionRepository,
     private readonly savingBlockchainService: SavingsBlockchainService,
+    private readonly domainEventBus: IDomainEventBus,
     config: Env
   ) {
     this.logger = createLogger(ExecuteSavingUseCase.name, config);
   }
 
+  private emitEvent(saving: TimeBasedSaving, error?: unknown) {
+    if (error) {
+      this.domainEventBus.publish(
+        new SavingExecutionEvent({
+          type: "failed",
+          saving,
+          error,
+        })
+      );
+    } else {
+      this.domainEventBus.publish(
+        new SavingExecutionEvent({
+          type: "success",
+          saving,
+        })
+      );
+    }
+  }
+
   async execute(savingsId: number) {
     const saving = await this.savingsRepo.findById(savingsId);
 
-    if (!saving.isActive) {
-      throw new BadRequestError(`Saving plan ${savingsId} is not active`);
+    try {
+      if (!saving.isActive) {
+        throw new BadRequestError(`Saving plan ${savingsId} is not active`);
+      }
+
+      const user = await this.userRepo.findById(saving.userId);
+
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      const execution = SavingExecution.createPending(
+        saving.id,
+        new Date(),
+        saving.amountToSave
+      );
+
+      this.validateExecution(execution, false);
+
+      this.logger.log(
+        `Executing saving ${saving.id} for user ${saving.userId}`,
+        {
+          savingId: saving.id,
+          executionId: execution.id,
+          amount: saving.amountToSave,
+          token: saving.tokenToSave,
+        }
+      );
+
+      const transactionResult = await this.executeBlockchainTransaction(
+        saving,
+        execution,
+        user
+      );
+
+      // 6. Update execution as successful
+      execution.markAsSuccess(transactionResult.txHash);
+      saving.recordSuccessfulSave(saving.amountToSave);
+
+      // 7. Save changes
+      await this.saveChanges(saving, execution);
+
+      this.logger.info({
+        message: `Successfully executed saving ${saving.id}`,
+        data: {
+          executionId: execution.id,
+          transactionHash: transactionResult.txHash,
+          amount: saving.amountToSave,
+        },
+      });
+
+      this.emitEvent(saving);
+    } catch (error: unknown) {
+      this.emitEvent(saving, error);
+      throw error;
     }
-
-    const user = await this.userRepo.findById(saving.userId);
-
-    if (!user) {
-      throw new NotFoundError("User not found");
-    }
-
-    const execution = SavingExecution.createPending(
-      saving.id,
-      new Date(),
-      saving.amountToSave
-    );
-
-    this.validateExecution(execution, false);
-
-    this.logger.log(`Executing saving ${saving.id} for user ${saving.userId}`, {
-      savingId: saving.id,
-      executionId: execution.id,
-      amount: saving.amountToSave,
-      token: saving.tokenToSave,
-    });
-
-    const transactionResult = await this.executeBlockchainTransaction(
-      saving,
-      execution,
-      user
-    );
-
-    // 6. Update execution as successful
-    execution.markAsSuccess(transactionResult.txHash);
-    saving.recordSuccessfulSave(saving.amountToSave);
-
-    // 7. Save changes
-    await this.saveChanges(saving, execution);
-
-    this.logger.info({
-      message: `Successfully executed saving ${saving.id}`,
-      data: {
-        executionId: execution.id,
-        transactionHash: transactionResult.txHash,
-        amount: saving.amountToSave,
-      },
-    });
   }
 
   private async saveChanges(
@@ -127,7 +159,7 @@ export class ExecuteSavingUseCase {
         executionId: execution.id,
         error: error.stack,
       });
-      throw new Error(`Blockchain transaction failed: ${error.message}`);
+      throw error;
     }
   }
 

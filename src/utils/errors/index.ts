@@ -2,8 +2,14 @@ import { AppError } from "./app-error.js";
 
 // 400 Bad Request
 export class BadRequestError extends AppError {
-  constructor(description = "Bad Request") {
-    super("BAD_REQUEST", 400, description);
+  constructor(description = "Bad Request", name: string = "BAD_REQUEST") {
+    super(name, 400, description);
+  }
+}
+
+export class InsufficientAmountError extends BadRequestError {
+  constructor(description = "Insufficient funds") {
+    super(description, "INSUFFICIENT_FUNDS");
   }
 }
 

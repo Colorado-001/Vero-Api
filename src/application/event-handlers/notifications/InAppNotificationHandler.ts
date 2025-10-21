@@ -19,7 +19,7 @@ export class InAppNotificationHandler {
   setupSubscriptions(eventBus: IDomainEventBus) {
     eventBus.subscribe<AllowanceWithdrawnEvent>(
       AllowanceWithdrawnEvent.eventName,
-      this.onAllowanceWithdrawn
+      (event) => this.onAllowanceWithdrawn(event)
     );
   }
 

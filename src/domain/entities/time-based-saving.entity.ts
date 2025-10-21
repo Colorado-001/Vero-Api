@@ -215,7 +215,7 @@ export class TimeBasedSaving {
         return `${minute} ${timeOfDay} ${day} * *`;
 
       case "every_n_minutes":
-        return `${this._dayOfMonth} * * * *`;
+        return `*/${this._dayOfMonth} * * * *`;
 
       default:
         throw new ValueError(

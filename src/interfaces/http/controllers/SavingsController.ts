@@ -86,6 +86,8 @@ export class SavingsController {
       this.logger
     );
 
+    let error;
+
     await this.coreDeps.persistenceSessionManager.executeInTransaction(
       async (manager: EntityManager) => {
         const savingsRepo = new TimeBasedSavingRepository(manager);
@@ -101,12 +103,16 @@ export class SavingsController {
           this.config
         );
 
-        await useCase.execute(savingsId);
-
-        res.json({
-          success: true,
-        });
+        error = await useCase.execute(savingsId);
       }
     );
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      success: true,
+    });
   };
 }

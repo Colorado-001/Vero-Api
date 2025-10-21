@@ -108,7 +108,7 @@ export class ExecuteSavingUseCase {
       this.emitEvent(saving);
     } catch (error: unknown) {
       this.emitEvent(saving, error);
-      throw error;
+      return error;
     }
   }
 

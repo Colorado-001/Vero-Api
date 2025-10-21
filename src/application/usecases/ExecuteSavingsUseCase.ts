@@ -17,6 +17,7 @@ import { ExecutionStatus } from "../../utils/enums";
 import { BlockchainAddress } from "../../types/blockchain";
 import { IDomainEventBus } from "../../domain/ports";
 import { SavingExecutionEvent } from "../../domain/events";
+import { AppError } from "../../utils/errors/app-error";
 
 export class ExecuteSavingUseCase {
   private readonly logger: winston.Logger;
@@ -83,18 +84,35 @@ export class ExecuteSavingUseCase {
         }
       );
 
-      const transactionResult = await this.executeBlockchainTransaction(
-        saving,
-        execution,
-        user
-      );
-
-      // 6. Update execution as successful
-      execution.markAsSuccess(transactionResult.txHash);
-      saving.recordSuccessfulSave(saving.amountToSave);
-
-      // 7. Save changes
       await this.saveChanges(saving, execution);
+
+      let transactionResult;
+      try {
+        transactionResult = await this.executeBlockchainTransaction(
+          saving,
+          execution,
+          user
+        );
+
+        // 6. Update execution as successful
+        execution.markAsSuccess(transactionResult.txHash);
+        saving.recordSuccessfulSave(saving.amountToSave);
+
+        // 7. Save changes
+        await this.saveChanges(saving, execution);
+      } catch (error) {
+        let message = "Unknown error";
+
+        if (error instanceof AppError) {
+          message = error.message;
+        } else if ((error as any)?.message) {
+          message = (error as any).message;
+        }
+
+        execution.markAsFailed(message);
+        await this.saveChanges(saving, execution);
+        throw error;
+      }
 
       this.logger.info({
         message: `Successfully executed saving ${saving.id}`,

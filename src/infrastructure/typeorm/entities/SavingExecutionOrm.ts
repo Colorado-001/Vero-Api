@@ -58,7 +58,9 @@ export class SavingExecutionOrm {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @ManyToOne(() => TimeBasedSavingOrm, (saving) => saving.executions)
+  @ManyToOne(() => TimeBasedSavingOrm, (saving) => saving.executions, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "savingId" })
   saving!: TimeBasedSavingOrm;
 }

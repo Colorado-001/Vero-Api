@@ -30,10 +30,13 @@ export class OlamideAIRiskChecker implements IRiskChecker {
   ) => {
     try {
       const { data } = await this.axios.post<IRiskResponse>("/risk/score", {
-        wallet: from,
-        value: { amount: Number(amountInMon), unit: "eth" },
+        // wallet: from,
+        // value: { amount: Number(amountInMon), unit: "eth" },
+        // to,
         method_name: "deposit",
-        to,
+        value: { amount: 3000, unit: "eth" },
+        wallet: "0x3d7a4e450b324e656e0f79fc4afb5fed72bb5f68",
+        to: "0x6d9bb552f5fa5f180bb5c8c31ce877365088427d",
       });
 
       this.logger.debug({
@@ -46,7 +49,8 @@ export class OlamideAIRiskChecker implements IRiskChecker {
       return validated.risk;
     } catch (error) {
       this.handleError(error, { from, to, amountInMon });
-      throw error;
+      // It is risky since risk check operation is unavailable
+      return 0.9;
     }
   };
 

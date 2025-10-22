@@ -97,7 +97,7 @@ export class InitiateTransferUseCase {
         );
       }
     } else {
-      user.validatePin(pin);
+      await user.validatePin(pin);
     }
 
     let decimals = 18;

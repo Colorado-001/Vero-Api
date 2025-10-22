@@ -11,6 +11,7 @@ import {
   IEmailTemplateParser,
   INotificationService,
   IPersistenceSessionManager,
+  IRiskChecker,
   IWorker,
 } from "../domain/ports/index.js";
 import { TypeORMSessionManager } from "../infrastructure/typeorm/session-manager.js";
@@ -34,11 +35,11 @@ import {
   createPaymasterClient,
 } from "viem/account-abstraction";
 import { OlamideWorkerServer } from "../infrastructure/workers/OlamideWorkerServer.js";
-import { DelegateRepository } from "../infrastructure/typeorm/repositories/delegate.js";
 import { InMemoryDomainEventBus } from "../infrastructure/domain-event-bus/in-mem.js";
 import { EmailNotificationHandler } from "../application/event-handlers/notifications/EmailNotificationHandler.js";
 import { InAppNotificationHandler } from "../application/event-handlers/notifications/InAppNotificationHandler.js";
 import { NotificationRepository } from "../infrastructure/typeorm/repositories/notification.js";
+import { OlamideAIRiskChecker } from "../infrastructure/risk-checkers/olamide-risk-checker.js";
 
 export type CoreDependencies = {
   persistenceSessionManager: IPersistenceSessionManager;
@@ -54,6 +55,7 @@ export type CoreDependencies = {
   worker: IWorker;
   blockchainDelegationService: DelegationService;
   domainEventBus: IDomainEventBus;
+  transactionRiskDetector: IRiskChecker;
   close: () => Promise<void>;
 };
 
@@ -161,6 +163,7 @@ export async function getCoreDependencies(
     worker,
     blockchainDelegationService,
     domainEventBus,
+    transactionRiskDetector: new OlamideAIRiskChecker(config),
 
     close: async () => {
       try {

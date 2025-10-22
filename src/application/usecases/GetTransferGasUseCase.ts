@@ -58,18 +58,25 @@ export class GetTransferGasUseCase {
       }
     }
 
-    const result = await this.transferService.estimateSponsoredGas({
-      amount,
-      to,
-      walletData: {
-        address: user.smartAccountAddress,
-        privateKey: user.privateKey,
-      },
-      decimals,
-      tokenAddress: tokenAddress || undefined,
-      delegation: signedDelegation || undefined,
-    });
+    try {
+      const result = await this.transferService.estimateSponsoredGas({
+        amount,
+        to,
+        walletData: {
+          address: user.smartAccountAddress,
+          privateKey: user.privateKey,
+        },
+        decimals,
+        tokenAddress: tokenAddress || undefined,
+        delegation: signedDelegation || undefined,
+      });
 
-    return result;
+      return result;
+    } catch (error) {
+      return {
+        estimatedCostMON: "0",
+        estimatedCostUSD: "0",
+      };
+    }
   }
 }

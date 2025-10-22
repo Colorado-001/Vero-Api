@@ -4,7 +4,7 @@ import {
   IUserRepository,
 } from "../../domain/repositories";
 import { BlockchainAddress } from "../../types/blockchain";
-import { NotFoundError } from "../../utils/errors";
+import { HighRiskOperationDetected, NotFoundError } from "../../utils/errors";
 import { WalletTransferService } from "../services";
 
 import tokens from "../../data/monadTestNetTpkens.json";
@@ -13,7 +13,7 @@ import { TransactionGas } from "../../types/transaction";
 import winston from "winston";
 import createLogger from "../../logging/logger.config";
 import { Env } from "../../config/env";
-import { IDomainEventBus } from "../../domain/ports";
+import { IDomainEventBus, IRiskChecker } from "../../domain/ports";
 import { AllowanceWithdrawnEvent } from "../../domain/events";
 
 export class InitiateTransferUseCase {
@@ -25,6 +25,7 @@ export class InitiateTransferUseCase {
     private readonly txnRepo: ITransactionRepository,
     private readonly delegationRepo: IDelegationRepository,
     private readonly domainEventBus: IDomainEventBus,
+    private readonly riskChecker: IRiskChecker,
     config: Env
   ) {
     this.logger = createLogger("InitiateTransferUseCase", config);
@@ -74,12 +75,29 @@ export class InitiateTransferUseCase {
     to: BlockchainAddress,
     amount: string,
     tokenSymbol?: string,
-    delegation?: string
+    delegation?: string,
+    pin?: string
   ) {
     const user = await this.userRepo.findById(userId);
 
     if (!user) {
       throw new NotFoundError("User not found");
+    }
+
+    if (!pin) {
+      const risk = await this.riskChecker.checkNativeTransaction(
+        user.smartAccountAddress,
+        to,
+        amount
+      );
+
+      if (risk > 0.65) {
+        throw new HighRiskOperationDetected(
+          "This transaction has been flagged by ##Vero AI Checker## as risky"
+        );
+      }
+    } else {
+      user.validatePin(pin);
     }
 
     let decimals = 18;

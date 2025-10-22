@@ -73,6 +73,7 @@ export class TransferController {
           txnRepo,
           delegationRepo,
           this.coreDeps.domainEventBus,
+          this.coreDeps.transactionRiskDetector,
           this.config
         );
 
@@ -81,7 +82,8 @@ export class TransferController {
           payload.to as BlockchainAddress,
           payload.amount,
           payload.tokenSymbol,
-          payload.delegation
+          payload.delegation,
+          payload.pin
         );
 
         res.status(httpStatus.OK).json({ success: true });

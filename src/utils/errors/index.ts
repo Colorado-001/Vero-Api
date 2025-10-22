@@ -13,6 +13,12 @@ export class InsufficientAmountError extends BadRequestError {
   }
 }
 
+export class InvalidPinError extends BadRequestError {
+  constructor(description = "Invalid pin") {
+    super(description, "INVALID_PIN");
+  }
+}
+
 // 401 Unauthorized
 export class UnauthorizedError extends AppError {
   constructor(description = "Unauthorized") {
@@ -22,8 +28,14 @@ export class UnauthorizedError extends AppError {
 
 // 403 Forbidden
 export class ForbiddenError extends AppError {
-  constructor(description = "Forbidden") {
-    super("FORBIDDEN", 403, description);
+  constructor(description = "Forbidden", name = "FORBIDDEN") {
+    super(name, 403, description);
+  }
+}
+
+export class HighRiskOperationDetected extends ForbiddenError {
+  constructor(description: string) {
+    super(description, "HIGH_RISK_OPERATION");
   }
 }
 

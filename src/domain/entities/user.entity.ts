@@ -3,6 +3,8 @@ import {
   BlockchainAddress,
   SmartAccountImplementation,
 } from "../../types/blockchain.js";
+import { comparePassword } from "../../utils/encryption.js";
+import { BadRequestError, InvalidPinError } from "../../utils/errors/index.js";
 
 export class UserEntity {
   private readonly _id!: string;
@@ -123,6 +125,18 @@ export class UserEntity {
     this._pin = pin;
     this._pinSetup = true;
     this._updatedAt = new Date();
+  }
+
+  async validatePin(pin: string) {
+    if (!this._pin) {
+      throw new BadRequestError("Pin not configured");
+    }
+
+    const isValid = await comparePassword(pin, this._pin);
+
+    if (!isValid) {
+      throw new InvalidPinError();
+    }
   }
 
   update(

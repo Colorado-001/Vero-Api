@@ -326,6 +326,7 @@ export class WalletTransferService {
         paymaster: paymasterClient,
       });
     } else {
+      await this.confirmBalance(transferParams);
       userOp = await bundlerClient.prepareUserOperation({
         account: smartAccount,
         calls: [transaction],

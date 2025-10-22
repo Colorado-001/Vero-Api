@@ -35,7 +35,14 @@ export class OlamideAIRiskChecker implements IRiskChecker {
         method_name: "deposit",
         to,
       });
+
+      this.logger.debug({
+        message: "Risk Response",
+        data,
+      });
+
       const validated = riskResultSchema.parse(data);
+
       return validated.risk;
     } catch (error) {
       this.handleError(error, { from, to, amountInMon });
@@ -50,6 +57,7 @@ export class OlamideAIRiskChecker implements IRiskChecker {
         data: {
           error: error.response?.data ?? error.message ?? error,
           config: error.config,
+          statusCode: error.status,
         },
       });
     } else {
